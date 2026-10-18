@@ -5,6 +5,16 @@ file. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- Reading headers and footers took the references of every section, and a
+  later section's part won: a seven-page form came out with the footer of
+  its last section and the first-page footer of its first. The first
+  section's parts are read now — they govern the document's first pages —
+  and first-page parts only with `<w:titlePg/>`, even-page ones only with
+  `<w:evenAndOddHeaders/>`, as Word shows them.
+
 ## [1.14.1] — 2026-08-17
 
 ### Changed
