@@ -7,6 +7,8 @@ namespace Dskripchenko\PhpDocx\Tests\Writer;
 use Dskripchenko\PhpDocx\Element\HorizontalRule;
 use Dskripchenko\PhpDocx\Element\Hyperlink;
 use Dskripchenko\PhpDocx\Element\LineBreak;
+use Dskripchenko\PhpDocx\Element\ListItem;
+use Dskripchenko\PhpDocx\Element\ListNode;
 use Dskripchenko\PhpDocx\Element\PageBreak;
 use Dskripchenko\PhpDocx\Element\Paragraph;
 use Dskripchenko\PhpDocx\Element\Run;
@@ -14,6 +16,7 @@ use Dskripchenko\PhpDocx\Element\Table;
 use Dskripchenko\PhpDocx\Element\TableCell;
 use Dskripchenko\PhpDocx\Element\TableRow;
 use Dskripchenko\PhpDocx\Style\Alignment;
+use Dskripchenko\PhpDocx\Style\Border;
 use Dskripchenko\PhpDocx\Style\BorderSet;
 use Dskripchenko\PhpDocx\Style\CellStyle;
 use Dskripchenko\PhpDocx\Style\ParagraphStyle;
@@ -159,6 +162,34 @@ final class BodyXmlBuilderTest extends TestCase
         ]);
 
         self::assertStringContainsString('<w:tblHeader/>', $xml);
+    }
+
+    #[Test]
+    public function it_places_numpr_before_the_other_properties_of_a_list_item(): void
+    {
+        // CT_PPrBase is a sequence: pStyle, numPr, pBdr, shd, spacing, ind, jc.
+        $xml = (new BodyXmlBuilder)->render([
+            new ListNode([
+                new ListItem([new Run('x')], style: new ParagraphStyle(
+                    alignment: Alignment::Center,
+                    spaceAfterTwips: 120,
+                    borders: BorderSet::all(new Border),
+                    shadingColor: 'eeeeee',
+                )),
+            ], ordered: true, levelText: '%1.'),
+        ]);
+
+        $order = ['<w:pStyle', '<w:numPr>', '<w:pBdr>', '<w:shd', '<w:spacing', '<w:jc'];
+        $last = -1;
+        foreach ($order as $tag) {
+            $pos = strpos($xml, $tag);
+            self::assertNotFalse($pos, $tag);
+            self::assertGreaterThan($last, $pos, $tag);
+            $last = $pos;
+        }
+
+        $bare = (new BodyXmlBuilder)->render([new ListNode([new ListItem([new Run('x')])], ordered: true, levelText: '%1.')]);
+        self::assertStringContainsString('<w:pPr><w:pStyle w:val="ListParagraph"/><w:numPr>', $bare);
     }
 
     #[Test]
