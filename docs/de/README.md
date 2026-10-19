@@ -238,10 +238,12 @@ HTML-Pipeline.
 ### DocumentBuilder
 
 Einstiegspunkt. Sammelt Body, Kopf-/Fußzeilen, Wasserzeichen,
-Seiteneinrichtung.
+Seiteneinrichtung, Dokumenteigenschaften (`docProps/core.xml`: Titel,
+Autor, Daten).
 
 ```php
 use Dskripchenko\PhpDocx\Build\DocumentBuilder;
+use Dskripchenko\PhpDocx\Style\CoreProperties;
 use Dskripchenko\PhpDocx\Style\PageSetup;
 use Dskripchenko\PhpDocx\Style\PaperSize;
 use Dskripchenko\PhpDocx\Style\Orientation;
@@ -252,6 +254,7 @@ $doc = DocumentBuilder::new()
         orientation: Orientation::Portrait,
     ))
     ->watermark('VERTRAULICH')
+    ->coreProperties(new CoreProperties(title: 'Bericht', creator: 'Acme GmbH'))
     ->heading(1, 'Bericht')
     ->paragraph('Inhalt')
     ->build();           // → Document AST
@@ -259,6 +262,9 @@ $doc = DocumentBuilder::new()
 $bytes = DocumentBuilder::new()->paragraph('Hallo')->toBytes();
 $count = DocumentBuilder::new()->paragraph('Hallo')->toFile('out.docx');
 ```
+
+Die Ausgabe ist byte-genau reproduzierbar: jeder ZIP-Eintrag trägt
+`CoreProperties::$modified` (UTC) bzw. 1980-01-01 00:00:00, wenn nicht gesetzt.
 
 ### ParagraphBuilder
 

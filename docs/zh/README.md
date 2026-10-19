@@ -229,10 +229,12 @@ pipeline 相同的不可变 AST。
 
 ### DocumentBuilder
 
-入口点。积累 body、页眉/页脚、水印、页面设置。
+入口点。积累 body、页眉/页脚、水印、页面设置、文档属性
+（`docProps/core.xml`：标题、作者、日期）。
 
 ```php
 use Dskripchenko\PhpDocx\Build\DocumentBuilder;
+use Dskripchenko\PhpDocx\Style\CoreProperties;
 use Dskripchenko\PhpDocx\Style\PageSetup;
 use Dskripchenko\PhpDocx\Style\PaperSize;
 use Dskripchenko\PhpDocx\Style\Orientation;
@@ -243,6 +245,7 @@ $doc = DocumentBuilder::new()
         orientation: Orientation::Portrait,
     ))
     ->watermark('机密')
+    ->coreProperties(new CoreProperties(title: '报告', creator: 'Acme Inc.'))
     ->heading(1, '报告')
     ->paragraph('正文')
     ->build();           // → Document AST
@@ -250,6 +253,9 @@ $doc = DocumentBuilder::new()
 $bytes = DocumentBuilder::new()->paragraph('你好')->toBytes();
 $count = DocumentBuilder::new()->paragraph('你好')->toFile('out.docx');
 ```
+
+输出逐字节可复现：每个 ZIP 条目的时间为 `CoreProperties::$modified`（UTC），
+未设置时为 1980-01-01 00:00:00。
 
 ### ParagraphBuilder
 

@@ -7,6 +7,12 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- `DocumentBuilder::coreProperties(CoreProperties)`: title, author, dates
+  and the rest of `docProps/core.xml` from the fluent builder. Until now
+  `build()` never set them, and builder users had to construct the
+  `Document` by hand to get a core part.
+
 ### Fixed
 - A tab or a newline in run text was written as is inside `<w:t>`, where
   Word shows it as a space at best. The writer now splits the text into

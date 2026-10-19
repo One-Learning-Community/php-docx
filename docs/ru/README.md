@@ -234,10 +234,12 @@ Namespace `Build` предоставляет fluent API для поэтапно�
 
 ### DocumentBuilder
 
-Точка входа. Накапливает body, header/footer, watermark, page setup.
+Точка входа. Накапливает body, header/footer, watermark, page setup,
+свойства документа (`docProps/core.xml`: название, автор, даты).
 
 ```php
 use Dskripchenko\PhpDocx\Build\DocumentBuilder;
+use Dskripchenko\PhpDocx\Style\CoreProperties;
 use Dskripchenko\PhpDocx\Style\PageSetup;
 use Dskripchenko\PhpDocx\Style\PaperSize;
 use Dskripchenko\PhpDocx\Style\Orientation;
@@ -248,6 +250,7 @@ $doc = DocumentBuilder::new()
         orientation: Orientation::Portrait,
     ))
     ->watermark('КОНФИДЕНЦИАЛЬНО')
+    ->coreProperties(new CoreProperties(title: 'Отчёт', creator: 'ООО «Ромашка»'))
     ->heading(1, 'Отчёт')
     ->paragraph('Тело документа')
     ->build();           // → Document AST
@@ -255,6 +258,9 @@ $doc = DocumentBuilder::new()
 $bytes = DocumentBuilder::new()->paragraph('Привет')->toBytes();
 $count = DocumentBuilder::new()->paragraph('Привет')->toFile('out.docx');
 ```
+
+Результат воспроизводим байт в байт: у каждой записи ZIP время
+`CoreProperties::$modified` (UTC), а без него — 1980-01-01 00:00:00.
 
 ### ParagraphBuilder
 

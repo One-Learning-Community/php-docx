@@ -317,10 +317,12 @@ HTML pipeline produces.
 
 ### DocumentBuilder
 
-Entry point. Accumulates body, header/footer, watermark, page setup.
+Entry point. Accumulates body, header/footer, watermark, page setup,
+core properties (`docProps/core.xml`: title, author, dates).
 
 ```php
 use Dskripchenko\PhpDocx\Build\DocumentBuilder;
+use Dskripchenko\PhpDocx\Style\CoreProperties;
 use Dskripchenko\PhpDocx\Style\PageSetup;
 use Dskripchenko\PhpDocx\Style\PaperSize;
 use Dskripchenko\PhpDocx\Style\Orientation;
@@ -331,6 +333,7 @@ $doc = DocumentBuilder::new()
         orientation: Orientation::Portrait,
     ))
     ->watermark('CONFIDENTIAL')
+    ->coreProperties(new CoreProperties(title: 'Report', creator: 'Acme Inc.'))
     ->heading(1, 'Report')
     ->paragraph('Body')
     ->build();           // → Document AST
@@ -338,6 +341,9 @@ $doc = DocumentBuilder::new()
 $bytes = DocumentBuilder::new()->paragraph('Hi')->toBytes();
 $count = DocumentBuilder::new()->paragraph('Hi')->toFile('out.docx');
 ```
+
+Output is byte-for-byte reproducible: every ZIP entry carries
+`CoreProperties::$modified` (UTC), or 1980-01-01 00:00:00 when it is not set.
 
 ### ParagraphBuilder
 
