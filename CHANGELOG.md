@@ -51,6 +51,13 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   written into the ZIP headers directly: `ZipArchive::setMtimeName()` alone
   converts through the process's `TZ`, so the bytes would still differ
   between machines in different time zones.
+- The table grid computed when `Table::$gridColumnsTwips` is not set repeated
+  a spanning cell's full width for every column it spans: a 2000-twip cell
+  with `gridSpan: 2` gave two 2000-twip columns, and the grid came out wider
+  than the table. The spanned columns now share the cell's width, and a
+  column takes its width from the first row where an unspanned cell with a
+  width covers it (a title row spanning the table no longer decides the
+  columns below it).
 
 ## [1.16.0] — 2026-10-20
 

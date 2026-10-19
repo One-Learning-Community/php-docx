@@ -293,6 +293,63 @@ final class BodyXmlBuilderTest extends TestCase
     }
 
     #[Test]
+    public function it_splits_a_spanning_cell_width_across_its_grid_columns(): void
+    {
+        $xml = (new BodyXmlBuilder)->render([
+            new Table([
+                new TableRow([
+                    new TableCell([new Paragraph([new Run('A')])], new CellStyle(widthTwips: 2000, gridSpan: 2)),
+                    new TableCell([new Paragraph([new Run('B')])], new CellStyle(widthTwips: 2000)),
+                ]),
+            ]),
+        ]);
+
+        self::assertStringContainsString(
+            '<w:tblGrid><w:gridCol w:w="1000"/><w:gridCol w:w="1000"/><w:gridCol w:w="2000"/></w:tblGrid>',
+            $xml,
+        );
+    }
+
+    #[Test]
+    public function it_takes_grid_widths_from_a_later_row_where_the_columns_are_unspanned(): void
+    {
+        $xml = (new BodyXmlBuilder)->render([
+            new Table([
+                new TableRow([
+                    new TableCell([new Paragraph([new Run('Title')])], new CellStyle(widthTwips: 5000, gridSpan: 2)),
+                ]),
+                new TableRow([
+                    new TableCell([new Paragraph([new Run('A')])], new CellStyle(widthTwips: 1500)),
+                    new TableCell([new Paragraph([new Run('B')])], new CellStyle(widthTwips: 3500)),
+                ]),
+            ]),
+        ]);
+
+        self::assertStringContainsString(
+            '<w:tblGrid><w:gridCol w:w="1500"/><w:gridCol w:w="3500"/></w:tblGrid>',
+            $xml,
+        );
+    }
+
+    #[Test]
+    public function it_defaults_grid_columns_without_widths_to_2000(): void
+    {
+        $xml = (new BodyXmlBuilder)->render([
+            new Table([
+                new TableRow([
+                    new TableCell([new Paragraph([new Run('A')])]),
+                    new TableCell([new Paragraph([new Run('B')])], new CellStyle(gridSpan: 2)),
+                ]),
+            ]),
+        ]);
+
+        self::assertStringContainsString(
+            '<w:tblGrid><w:gridCol w:w="2000"/><w:gridCol w:w="2000"/><w:gridCol w:w="2000"/></w:tblGrid>',
+            $xml,
+        );
+    }
+
+    #[Test]
     public function it_puts_numpr_after_keep_next_in_a_list_item(): void
     {
         $xml = (new BodyXmlBuilder)->render([

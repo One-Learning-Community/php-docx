@@ -571,9 +571,13 @@ final class BodyXmlBuilder
     }
 
     /**
-     * Computes the gridCols from the cells of the first row. When the cells
-     * have no widthTwips we distribute them equally (5000 twips per column by
-     * default).
+     * Computes the gridCols when the table has no explicit gridColumnsTwips.
+     *
+     * The number of columns is the first row's total gridSpan. Each column
+     * takes its width from the first row in which an unspanned cell with a
+     * known width covers it; failing that, from the first spanning cell with
+     * a known width that covers it, divided by its span (so the columns of a
+     * spanning cell add up to its width); failing that, 2000 twips.
      *
      * @return list<int>
      */
@@ -582,27 +586,59 @@ final class BodyXmlBuilder
         if ($t->rows === []) {
             return [];
         }
-        // We take the first row and, for every cell, its widthTwips or 0.
-        $firstRow = $t->rows[0];
-        $cols = [];
-        foreach ($firstRow->cells as $cell) {
-            $w = $cell->style->widthTwips;
-            if ($w === null && $cell->style->widthPercent !== null) {
-                // A pct is invalid in the grid — a gridCol requires dxa. The
-                // approximation: a percentage of 9000 (roughly an A4 page minus
-                // the margins).
-                $pct = $cell->style->widthPercent / 50;
-                $w = (int) round($pct / 100 * 9000);
-            }
-            $cols[] = $w ?? 2000;
-            // Accounting for the colspan: every "extra" column is added as
-            // well (with an equal width).
-            for ($i = 1; $i < $cell->style->gridSpan; $i++) {
-                $cols[] = $w ?? 2000;
+        $count = 0;
+        foreach ($t->rows[0]->cells as $cell) {
+            $count += max(1, $cell->style->gridSpan);
+        }
+
+        /** @var array<int, int> $exact widths from unspanned cells */
+        $exact = [];
+        /** @var array<int, int> $shared widths split from spanning cells */
+        $shared = [];
+        foreach ($t->rows as $row) {
+            $col = 0;
+            foreach ($row->cells as $cell) {
+                $span = max(1, $cell->style->gridSpan);
+                $w = $this->cellWidthForGrid($cell);
+                if ($w !== null) {
+                    for ($i = $col; $i < $col + $span && $i < $count; $i++) {
+                        if ($span === 1) {
+                            $exact[$i] ??= $w;
+                        } else {
+                            $shared[$i] ??= intdiv($w, $span);
+                        }
+                    }
+                }
+                $col += $span;
             }
         }
 
+        $cols = [];
+        for ($i = 0; $i < $count; $i++) {
+            $cols[] = $exact[$i] ?? $shared[$i] ?? 2000;
+        }
+
         return $cols;
+    }
+
+    /**
+     * A cell's width in twips for the grid, or null when it has none.
+     */
+    private function cellWidthForGrid(TableCell $cell): ?int
+    {
+        if ($cell->style->widthTwips !== null) {
+            return $cell->style->widthTwips;
+        }
+        if ($cell->style->widthPercent !== null) {
+            // A pct is invalid in the grid — a gridCol requires dxa. The
+            // approximation: a percentage of 9000 (roughly an A4 page minus
+            // the margins).
+            $pct = $cell->style->widthPercent / 50;
+
+            return (int) round($pct / 100 * 9000);
+        }
+
+        return null;
     }
 
     private function renderTableRow(TableRow $row): string
