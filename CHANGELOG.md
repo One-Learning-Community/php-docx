@@ -13,6 +13,12 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `<w:t>`, `<w:tab/>` and `<w:br/>` (for "\n", "\r\n" and "\r"). The reader
   reads `<w:tab/>` as "\t", so a document read and written back lost its
   tabs; a `<pre>` from HTML lost its line breaks.
+- Text with an invalid UTF-8 sequence was written as an empty string: the
+  whole run (or attribute) was dropped without a word. `XmlEscape` now
+  replaces the sequence with U+FFFD and keeps the rest.
+- A control character in text (`\x01`, a vertical tab pasted from Word, …)
+  went into the XML as is, and Word refused to open the file. `XmlEscape`
+  now removes every character XML 1.0 does not allow.
 
 ## [1.16.0] — 2026-10-20
 
