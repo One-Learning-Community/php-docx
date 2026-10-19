@@ -48,7 +48,9 @@ final class WordNumberingRoundTripTest extends TestCase
 
         self::assertStringContainsString('counters(list-item, ".") ". "', $imported->css);
         self::assertStringContainsString('"4." counter(list-item) ". "', $imported->css);
-        self::assertStringContainsString('<ol start="3"><li style="list-style-type:none"><ol>', $imported->bodyHtml);
+        self::assertMatchesRegularExpression('/<ol style="margin:0;padding-left:0" start="3"><li style="list-style-type:none[^"]*"><ol /', $imported->bodyHtml);
+        // A level is placed by its numbering's indent, not by the nesting.
+        self::assertStringContainsString('<ol style="margin:0;padding-left:0">', $imported->bodyHtml);
     }
 
     #[Test]

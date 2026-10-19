@@ -91,7 +91,7 @@ final class NumberingReader
     }
 
     /**
-     * @return array<int, array{format: ListFormat, startAt: int, levelText: string|null}>
+     * @return array<int, array{format: ListFormat, startAt: int, levelText: string|null, indentLeft: int|null}>
      */
     private function readAbstractLevels(\DOMElement $abstractNum): array
     {
@@ -108,7 +108,7 @@ final class NumberingReader
     }
 
     /**
-     * @return array{format: ListFormat, startAt: int, levelText: string|null}
+     * @return array{format: ListFormat, startAt: int, levelText: string|null, indentLeft: int|null}
      */
     private function readSingleLevel(\DOMElement $lvl): array
     {
@@ -136,6 +136,26 @@ final class NumberingReader
             }
         }
 
-        return ['format' => $format, 'startAt' => $startAt, 'levelText' => $lvlText !== null ? OoxmlNs::wVal($lvlText) : null];
+        // The level's own indent: where its text starts, the label hanging
+        // in front of it.
+        $indentLeft = null;
+        $pPr = OoxmlNs::firstChild($lvl, OoxmlNs::W, 'pPr');
+        $ind = $pPr !== null ? OoxmlNs::firstChild($pPr, OoxmlNs::W, 'ind') : null;
+        if ($ind !== null) {
+            foreach (['left', 'start'] as $attr) {
+                $v = $ind->getAttributeNS(OoxmlNs::W, $attr);
+                if ($v !== '' && is_numeric($v)) {
+                    $indentLeft = (int) $v;
+                    break;
+                }
+            }
+        }
+
+        return [
+            'format' => $format,
+            'startAt' => $startAt,
+            'levelText' => $lvlText !== null ? OoxmlNs::wVal($lvlText) : null,
+            'indentLeft' => $indentLeft,
+        ];
     }
 }

@@ -19,6 +19,9 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   writer emits such a list as one Word multilevel numbering. A job
   description numbered `3.1 … 3.21` came out as `1 … 21` under every
   heading.
+- Each level keeps where Word places it (`ListNode::$indentLeftTwips`, from
+  the numbering's `w:ind`): the serializer writes the list without the
+  browser's nesting indent and moves every item by what its level adds.
 
 ### Fixed
 - Reading headers and footers took the references of every section, and a

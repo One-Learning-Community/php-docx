@@ -216,7 +216,7 @@ final class SerializerTest extends TestCase
         self::assertStringContainsString('<h1', $imported->bodyHtml);
         self::assertStringContainsString('<strong>Bold</strong>', $imported->bodyHtml);
         self::assertStringContainsString('<em>italic</em>', $imported->bodyHtml);
-        self::assertStringContainsString('<ul>', $imported->bodyHtml);
+        self::assertStringContainsString('<ul', $imported->bodyHtml);
         self::assertStringContainsString('<table', $imported->bodyHtml);
         // Cell content; a semantic th/td can be lost without a <thead> wrapper in
         // the source HTML (a converter limitation, not a serializer one).

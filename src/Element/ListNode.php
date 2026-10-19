@@ -41,6 +41,12 @@ final readonly class ListNode implements BlockElement
         public int $startAt = 1,
         public ?string $levelText = null,
         public ?string $markerClass = null,
+        /**
+         * Where the level's text starts, in twips from the margin — Word
+         * places a level by its numbering, not by how deep it is nested.
+         * Null for the plain nesting indent.
+         */
+        public ?int $indentLeftTwips = null,
     ) {}
 
     public function effectiveFormat(): ListFormat

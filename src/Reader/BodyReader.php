@@ -297,6 +297,7 @@ final class BodyReader
             startAt: $startAt ?? $this->numbering->startAtFor($numId, $depth),
             levelText: $ordered ? $this->numbering->levelTextFor($numId, $depth) : null,
             markerClass: $ordered ? 'wl'.$numId.'-'.$depth : null,
+            indentLeftTwips: $this->numbering->indentLeftFor($numId, $depth),
         );
     }
 

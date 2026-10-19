@@ -396,10 +396,12 @@ final class Serializer
         return 'data:'.$mime.';base64,'.base64_encode($bytes);
     }
 
-    private function renderList(ListNode $list, int $depth = 0): string
+    private function renderList(ListNode $list, int $depth = 0, int $parentLeftTwips = 0): string
     {
         $tag = $list->ordered ? 'ol' : 'ul';
-        $attrs = '';
+        // A level placed by Word's numbering: no nesting indent of the
+        // browser's own, every item moved by what its level adds.
+        $attrs = $list->indentLeftTwips !== null ? ' style="margin:0;padding-left:0"' : '';
         if ($list->ordered) {
             $type = $this->listTypeAttr($list);
             if ($type !== null) {
@@ -416,7 +418,7 @@ final class Serializer
         }
         $items = '';
         foreach ($list->items as $item) {
-            $items .= $this->renderListItem($item, $class, $depth);
+            $items .= $this->renderListItem($item, $class, $depth, $list->indentLeftTwips, $parentLeftTwips);
         }
 
         return '<'.$tag.$attrs.'>'.$items.'</'.$tag.'>';
@@ -433,11 +435,19 @@ final class Serializer
         };
     }
 
-    private function renderListItem(ListItem $item, ?string $class = null, int $depth = 0): string
+    private function renderListItem(ListItem $item, ?string $class = null, int $depth = 0, ?int $levelLeftTwips = null, int $parentLeftTwips = 0): string
     {
         $inner = $this->renderInlines($item->children);
-        $nested = $item->nestedList !== null ? $this->renderList($item->nestedList, $depth + 1) : '';
-        $css = $this->paragraphStyleCss($item->style);
+        $style = $item->style;
+        $left = $parentLeftTwips;
+        if ($levelLeftTwips !== null) {
+            // The paragraph's own indent wins over its level's; the label hangs
+            // outside the text, so the first-line offset goes.
+            $left = $style->indentLeftTwips !== 0 ? $style->indentLeftTwips : $levelLeftTwips;
+            $style = $style->copy(indentLeftTwips: $left - $parentLeftTwips, indentFirstLineTwips: 0);
+        }
+        $nested = $item->nestedList !== null ? $this->renderList($item->nestedList, $depth + 1, $left) : '';
+        $css = $this->paragraphStyleCss($style);
         // An item that only carries a nested list shows no label: it stands
         // for a parent outside the list, and its number is what the nested
         // one counts on from.

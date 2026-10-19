@@ -15,7 +15,7 @@ use Dskripchenko\PhpDocx\Element\ListFormat;
 final readonly class NumberingDefinitions
 {
     /**
-     * @param  array<int, array<int, array{format?: ListFormat, startAt?: int, levelText?: string|null}>>  $byNumId
+     * @param  array<int, array<int, array{format?: ListFormat, startAt?: int, levelText?: string|null, indentLeft?: int|null}>>  $byNumId
      * @param  array<int, int>  $abstractOf  numId → abstractNumId
      * @param  array<int, true>  $restarts  numIds with a level override — they restart the numbering
      */
@@ -24,6 +24,12 @@ final readonly class NumberingDefinitions
         public array $abstractOf = [],
         public array $restarts = [],
     ) {}
+
+    /** Where a level's text starts, in twips from the margin; null when the level does not say. */
+    public function indentLeftFor(int $numId, int $level = 0): ?int
+    {
+        return $this->byNumId[$numId][$level]['indentLeft'] ?? null;
+    }
 
     /** Word's label pattern of a level (`%1.%2.`); null when not given. */
     public function levelTextFor(int $numId, int $level = 0): ?string
