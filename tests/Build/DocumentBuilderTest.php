@@ -239,4 +239,12 @@ final class DocumentBuilderTest extends TestCase
     {
         self::assertNull(DocumentBuilder::new()->build()->coreProperties);
     }
+
+    #[Test]
+    public function paragraph_builder_sets_style_id(): void
+    {
+        $p = (new ParagraphBuilder)->styleId('Quote')->text('x')->build();
+        self::assertSame('Quote', $p->styleId);
+        self::assertNull((new ParagraphBuilder)->build()->styleId);
+    }
 }

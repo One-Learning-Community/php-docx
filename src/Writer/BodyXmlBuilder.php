@@ -212,7 +212,7 @@ final class BodyXmlBuilder
 
     private function renderParagraph(Paragraph $p): string
     {
-        $pPr = $this->renderParagraphProperties($p->style, $p->headingLevel);
+        $pPr = $this->renderParagraphProperties($p->style, $p->headingLevel, styleId: $p->styleId);
         $children = '';
         foreach ($p->children as $child) {
             $children .= $this->renderInline($child);
@@ -224,12 +224,20 @@ final class BodyXmlBuilder
     /**
      * @param  string  $numPr  A ready `<w:numPr>` of a list item: it is placed at its
      *                         position in the sequence (and `ListParagraph` is the style).
+     * @param  string|null  $styleId  An explicit paragraph style id; it wins over the
+     *                                heading level and the list style.
      */
-    private function renderParagraphProperties(ParagraphStyle $style, ?int $headingLevel, string $numPr = ''): string
-    {
+    private function renderParagraphProperties(
+        ParagraphStyle $style,
+        ?int $headingLevel,
+        string $numPr = '',
+        ?string $styleId = null,
+    ): string {
         $pPr = '';
 
-        if ($headingLevel !== null && $headingLevel >= 1 && $headingLevel <= 6) {
+        if ($styleId !== null && $styleId !== '') {
+            $pPr .= '<w:pStyle w:val="'.XmlEscape::attr($styleId).'"/>';
+        } elseif ($headingLevel !== null && $headingLevel >= 1 && $headingLevel <= 6) {
             $pPr .= '<w:pStyle w:val="Heading'.$headingLevel.'"/>';
         } elseif ($numPr !== '') {
             $pPr .= '<w:pStyle w:val="ListParagraph"/>';

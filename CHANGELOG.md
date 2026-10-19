@@ -12,6 +12,11 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   and the rest of `docProps/core.xml` from the fluent builder. Until now
   `build()` never set them, and builder users had to construct the
   `Document` by hand to get a core part.
+- `Paragraph::$styleId` and `ParagraphBuilder::styleId()`: any paragraph
+  style id (`Normal`, `Title`, `Quote`, a custom one registered with
+  `StyleRegistry::paragraph()`) is written as `<w:pStyle>`. Only `Heading1..6`
+  (through `headingLevel`) could be referenced before. An explicit id wins
+  over the heading level.
 
 ### Fixed
 - A tab or a newline in run text was written as is inside `<w:t>`, where

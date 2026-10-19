@@ -294,6 +294,7 @@ $count = DocumentBuilder::new()->paragraph('Привет')->toFile('out.docx');
 ```php
 ->paragraph(fn ($p) => $p
     ->alignCenter()           // alignRight()/alignJustify()
+    ->styleId('Quote')        // id стиля из StyleRegistry
     ->indentMm(left: 20, firstLine: 10)
     ->spacingPt(before: 6, after: 12)
     ->text('С отступами')
@@ -557,7 +558,7 @@ foreach ($variables as $v) {
 |---|---|---|
 | `Document` | root | `{ section: Section, watermarkText: ?string }` |
 | `Section` | container | `{ body, header, footer, pageSetup, firstHeader, firstFooter, evenHeader, evenFooter }` |
-| `Paragraph` | BlockElement | `{ children: InlineElement[], style, headingLevel: ?int }` |
+| `Paragraph` | BlockElement | `{ children: InlineElement[], style, headingLevel: ?int, styleId: ?string }` |
 | `Run` | InlineElement | `{ text: string, style: RunStyle }` |
 | `Hyperlink` | InlineElement | `{ href: ?string, anchor: ?string, children }` |
 | `Bookmark` | InlineElement | `{ name: string, children }` |

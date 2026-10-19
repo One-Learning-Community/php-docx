@@ -289,6 +289,7 @@ $count = DocumentBuilder::new()->paragraph('你好')->toFile('out.docx');
 ```php
 ->paragraph(fn ($p) => $p
     ->alignCenter()           // 或 alignRight() / alignJustify()
+    ->styleId('Quote')        // StyleRegistry 中的样式 id
     ->indentMm(left: 20, firstLine: 10)
     ->spacingPt(before: 6, after: 12)
     ->text('带缩进与间距')
@@ -548,7 +549,7 @@ foreach ($variables as $v) {
 |---|---|---|
 | `Document` | root | `{ section: Section, watermarkText: ?string }` |
 | `Section` | container | `{ body, header, footer, pageSetup, firstHeader, firstFooter, evenHeader, evenFooter }` |
-| `Paragraph` | BlockElement | `{ children: InlineElement[], style, headingLevel: ?int }` |
+| `Paragraph` | BlockElement | `{ children: InlineElement[], style, headingLevel: ?int, styleId: ?string }` |
 | `Run` | InlineElement | `{ text: string, style: RunStyle }` |
 | `Hyperlink` | InlineElement | `{ href: ?string, anchor: ?string, children }` |
 | `Bookmark` | InlineElement | `{ name: string, children }` |

@@ -377,6 +377,7 @@ Paragraph-level styling:
 ```php
 ->paragraph(fn ($p) => $p
     ->alignCenter()           // or alignRight()/alignJustify()
+    ->styleId('Quote')        // a style id from the StyleRegistry
     ->indentMm(left: 20, firstLine: 10)
     ->spacingPt(before: 6, after: 12)
     ->text('Indented & spaced')
@@ -641,7 +642,7 @@ All elements live under `Dskripchenko\PhpDocx\Element` namespace.
 |---|---|---|
 | `Document` | root | `{ section: Section, watermarkText: ?string }` |
 | `Section` | container | `{ body, header, footer, pageSetup, firstHeader, firstFooter, evenHeader, evenFooter }` |
-| `Paragraph` | BlockElement | `{ children: InlineElement[], style: ParagraphStyle, headingLevel: ?int }` |
+| `Paragraph` | BlockElement | `{ children: InlineElement[], style: ParagraphStyle, headingLevel: ?int, styleId: ?string }` |
 | `Run` | InlineElement | `{ text: string, style: RunStyle }` |
 | `Hyperlink` | InlineElement | `{ href: ?string, anchor: ?string, children: InlineElement[] }` |
 | `Bookmark` | InlineElement | `{ name: string, children: InlineElement[] }` |

@@ -200,6 +200,34 @@ final class BodyXmlBuilderTest extends TestCase
     }
 
     #[Test]
+    public function it_renders_an_explicit_style_id_as_pstyle(): void
+    {
+        $xml = (new BodyXmlBuilder)->render([
+            new Paragraph([new Run('x')], new ParagraphStyle(keepWithNext: true), styleId: 'Title'),
+        ]);
+        self::assertStringContainsString('<w:pPr><w:pStyle w:val="Title"/><w:keepNext/>', $xml);
+    }
+
+    #[Test]
+    public function it_prefers_the_style_id_over_the_heading_level(): void
+    {
+        $xml = (new BodyXmlBuilder)->render([
+            new Paragraph([new Run('x')], headingLevel: 1, styleId: 'ChapterTitle'),
+        ]);
+        self::assertStringContainsString('<w:pStyle w:val="ChapterTitle"/>', $xml);
+        self::assertStringNotContainsString('Heading1', $xml);
+    }
+
+    #[Test]
+    public function it_escapes_the_style_id(): void
+    {
+        $xml = (new BodyXmlBuilder)->render([
+            new Paragraph([new Run('x')], styleId: 'A"&B'),
+        ]);
+        self::assertStringContainsString('<w:pStyle w:val="A&quot;&amp;B"/>', $xml);
+    }
+
+    #[Test]
     public function it_renders_cant_split_row_before_header_and_height(): void
     {
         $xml = (new BodyXmlBuilder)->render([
