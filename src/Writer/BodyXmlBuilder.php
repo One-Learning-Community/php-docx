@@ -528,7 +528,7 @@ final class BodyXmlBuilder
     private function renderTableProperties(TableStyle $s): string
     {
         // The order of the elements in a <w:tblPr> per the OOXML CT_TblPr
-        // schema: tblW → jc → tblBorders → tblLayout → tblCellMar. Word and
+        // schema: tblW → jc → tblInd → tblBorders → tblLayout → tblCellMar. Word and
         // Pages ignore the properties when the order is broken.
         $tblPr = '';
 
@@ -544,6 +544,11 @@ final class BodyXmlBuilder
         // alignment
         if ($s->alignment !== Alignment::Start) {
             $tblPr .= '<w:jc w:val="'.$s->alignment->value.'"/>';
+        }
+
+        // indent
+        if ($s->indentTwips !== null) {
+            $tblPr .= '<w:tblInd w:w="'.$s->indentTwips.'" w:type="dxa"/>';
         }
 
         // borders

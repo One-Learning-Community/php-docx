@@ -392,7 +392,7 @@ Length::px(100);    // 1500（CSS px @ 96 DPI）
 大多数构造器都暴露了单位感知快捷方法：
 
 - TableBuilder：`widthPt/widthMm/widthCm/widthInches`、
-  `cellMarginsMm/cellMarginsPt`
+  `cellMarginsMm/cellMarginsPt`、`indent/indentMm/indentPt`
 - TableCellBuilder：`widthPt/Mm/Cm/Inches`、`paddingMm/Pt/Cm/Inches`
 - ColumnBuilder：`widthPt/Mm/Cm/Inches/Px`
 - ParagraphBuilder：`indentMm/Cm/Pt/Inches`、`spacingPt/Mm`
@@ -569,7 +569,7 @@ foreach ($variables as $v) {
 - `RunStyle` — 字体（中日韩文字用 `fontFamilyEastAsia`）、weight、italic、color、size、highlight 等
 - `ParagraphStyle` — alignment、缩进、间距、边框、分页（keepWithNext、keepLines、pageBreakBefore、widowControl）
 - `CellStyle` — width、padding、边框、valign、gridSpan、rowSpan
-- `TableStyle` — width、边框、对齐、单元格边距、布局
+- `TableStyle` — width、边框、对齐、单元格边距、布局、缩进（`indentTwips`）
 - `PageSetup`、`PaperSize`、`Orientation`、`Alignment`、`VerticalAlign`、
   `BorderStyle`、`Border`、`BorderSet`
 

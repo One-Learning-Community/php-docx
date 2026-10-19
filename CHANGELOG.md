@@ -30,6 +30,11 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `RunStyleBuilder::fontFamilyEastAsia()`: the font Word uses for CJK text.
   Written in document and style run properties, and read back from an
   explicit `w:eastAsia`.
+- Table indent: `TableStyle::$indentTwips` and `TableBuilder::indent()` /
+  `indentMm()` / `indentPt()` write `<w:tblInd w:type="dxa">`, which moves
+  the table in from the leading margin (negative values pull it out). The
+  reader parses it back; HTML carries it as `margin-left` on the `<table>`
+  in both directions.
 
 ### Fixed
 - A tab or a newline in run text was written as is inside `<w:t>`, where

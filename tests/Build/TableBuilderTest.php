@@ -209,6 +209,21 @@ final class TableBuilderTest extends TestCase
     }
 
     #[Test]
+    public function table_indent(): void
+    {
+        $doc = DocumentBuilder::new()
+            ->table(fn (TableBuilder $t) => $t->indentPt(18)->row(['A']))
+            ->table(fn (TableBuilder $t) => $t->row(['B']))
+            ->build();
+        /** @var Table $t */
+        $t = $doc->section->body[0];
+        self::assertSame(360, $t->style->indentTwips);
+        /** @var Table $t2 */
+        $t2 = $doc->section->body[1];
+        self::assertNull($t2->style->indentTwips);
+    }
+
+    #[Test]
     public function nested_table_in_cell(): void
     {
         $doc = DocumentBuilder::new()

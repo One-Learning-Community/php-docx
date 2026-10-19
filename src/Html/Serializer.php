@@ -609,6 +609,8 @@ final class Serializer
         if ($s->alignment === Alignment::Center) {
             $parts[] = 'margin-left:auto';
             $parts[] = 'margin-right:auto';
+        } elseif ($s->indentTwips !== null && $s->indentTwips !== 0) {
+            $parts[] = 'margin-left:'.$this->twipsToPt($s->indentTwips).'pt';
         }
         if ($s->borders !== null) {
             foreach ($this->borderSetCss($s->borders) as $cssLine) {

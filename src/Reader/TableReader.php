@@ -106,6 +106,7 @@ final class TableReader
         $cellMarBottom = 0;
         $cellMarLeft = 80;
         $cellMarRight = 80;
+        $indentTwips = null;
 
         foreach ($tblPr->childNodes as $node) {
             if (! $node instanceof \DOMElement || $node->namespaceURI !== OoxmlNs::W) {
@@ -121,6 +122,14 @@ final class TableReader
                         'right', 'end' => Alignment::End,
                         default => Alignment::Start,
                     };
+                    break;
+                case 'tblInd':
+                    // Only dxa carries a length; `nil` and `auto` mean no indent.
+                    $type = $node->getAttributeNS(OoxmlNs::W, 'type');
+                    $w = $node->getAttributeNS(OoxmlNs::W, 'w');
+                    if (($type === '' || $type === 'dxa') && preg_match('/^-?\d+$/', $w) === 1) {
+                        $indentTwips = (int) $w;
+                    }
                     break;
                 case 'tblLayout':
                     $fixedLayout = $node->getAttributeNS(OoxmlNs::W, 'type') === 'fixed';
@@ -145,6 +154,7 @@ final class TableReader
             cellMarginRightTwips: $cellMarRight,
             cellMarginBottomTwips: $cellMarBottom,
             cellMarginLeftTwips: $cellMarLeft,
+            indentTwips: $indentTwips,
         );
     }
 

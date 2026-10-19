@@ -165,6 +165,21 @@ final class TableReaderTest extends TestCase
     }
 
     #[Test]
+    public function tblInd_extracted(): void
+    {
+        $read = fn (string $ind) => (new TableReader)->read($this->loadTable(
+            '<w:tbl><w:tblPr>'.$ind.'</w:tblPr>'
+            .'<w:tr><w:tc><w:p><w:r><w:t>x</w:t></w:r></w:p></w:tc></w:tr>'
+            .'</w:tbl>'
+        ))->style->indentTwips;
+
+        self::assertSame(360, $read('<w:tblInd w:w="360" w:type="dxa"/>'));
+        self::assertSame(-108, $read('<w:tblInd w:w="-108" w:type="dxa"/>'));
+        self::assertNull($read('<w:tblInd w:w="0" w:type="nil"/>'));
+        self::assertNull($read(''));
+    }
+
+    #[Test]
     public function trHeight_extracted(): void
     {
         $tbl = $this->loadTable(

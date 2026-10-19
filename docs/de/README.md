@@ -402,7 +402,7 @@ Length::px(100);    // 1500  (CSS px @ 96 DPI)
 Die meisten Builder bieten einheiten-bewusste Shortcuts:
 
 - TableBuilder: `widthPt/widthMm/widthCm/widthInches`,
-  `cellMarginsMm/cellMarginsPt`
+  `cellMarginsMm/cellMarginsPt`, `indent/indentMm/indentPt`
 - TableCellBuilder: `widthPt/Mm/Cm/Inches`, `paddingMm/Pt/Cm/Inches`
 - ColumnBuilder: `widthPt/Mm/Cm/Inches/Px`
 - ParagraphBuilder: `indentMm/Cm/Pt/Inches`, `spacingPt/Mm`
@@ -586,7 +586,7 @@ Styles liegen unter `Dskripchenko\PhpDocx\Style`:
 - `ParagraphStyle` — Ausrichtung, Einzüge, Abstände, Rahmen, Seitenumbruch (keepWithNext, keepLines, pageBreakBefore, widowControl)
 - `CellStyle` — Breite, Padding, Rahmen, vertikale Ausrichtung,
   gridSpan, rowSpan
-- `TableStyle` — Breite, Rahmen, Ausrichtung, Zellenränder, Layout
+- `TableStyle` — Breite, Rahmen, Ausrichtung, Zellenränder, Layout, Einzug (`indentTwips`)
 - `PageSetup`, `PaperSize`, `Orientation`, `Alignment`, `VerticalAlign`,
   `BorderStyle`, `Border`, `BorderSet`
 

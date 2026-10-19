@@ -480,7 +480,7 @@ Length::px(100);    // 1500  (CSS px @ 96 DPI)
 
 Most builders expose unit-aware shortcuts:
 
-- TableBuilder: `widthPt/widthMm/widthCm/widthInches`, `cellMarginsMm/cellMarginsPt`
+- TableBuilder: `widthPt/widthMm/widthCm/widthInches`, `cellMarginsMm/cellMarginsPt`, `indent/indentMm/indentPt`
 - TableCellBuilder: `widthPt/Mm/Cm/Inches`, `paddingMm/Pt/Cm/Inches`
 - ColumnBuilder: `widthPt/Mm/Cm/Inches/Px`
 - ParagraphBuilder: `indentMm/Cm/Pt/Inches`, `spacingPt/Mm`
@@ -662,7 +662,7 @@ Styles live under `Dskripchenko\PhpDocx\Style`:
 - `RunStyle` — font (and `fontFamilyEastAsia` for CJK text), weight, italic, color, size, highlight, …
 - `ParagraphStyle` — alignment, indents, spacing, borders, pagination (keepWithNext, keepLines, pageBreakBefore, widowControl)
 - `CellStyle` — width, padding, borders, valign, gridSpan, rowSpan
-- `TableStyle` — width, borders, alignment, cell margins, layout
+- `TableStyle` — width, borders, alignment, cell margins, layout, indent (`indentTwips`)
 - `PageSetup`, `PaperSize`, `Orientation`, `Alignment`, `VerticalAlign`,
   `BorderStyle`, `Border`, `BorderSet`
 

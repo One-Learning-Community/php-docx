@@ -396,7 +396,7 @@ Length::px(100);    // 1500  (CSS px @ 96 DPI)
 
 Большинство builder'ов имеют unit-aware shortcut'ы:
 
-- TableBuilder: `widthPt/widthMm/widthCm/widthInches`, `cellMarginsMm/cellMarginsPt`
+- TableBuilder: `widthPt/widthMm/widthCm/widthInches`, `cellMarginsMm/cellMarginsPt`, `indent/indentMm/indentPt`
 - TableCellBuilder: `widthPt/Mm/Cm/Inches`, `paddingMm/Pt/Cm/Inches`
 - ColumnBuilder: `widthPt/Mm/Cm/Inches/Px`
 - ParagraphBuilder: `indentMm/Cm/Pt/Inches`, `spacingPt/Mm`
@@ -578,7 +578,7 @@ foreach ($variables as $v) {
 - `RunStyle` — шрифт (и `fontFamilyEastAsia` для текста CJK), weight, italic, color, size, highlight, …
 - `ParagraphStyle` — alignment, indents, spacing, borders, разбиение на страницы (keepWithNext, keepLines, pageBreakBefore, widowControl)
 - `CellStyle` — width, padding, borders, valign, gridSpan, rowSpan
-- `TableStyle` — width, borders, alignment, cell margins, layout
+- `TableStyle` — width, borders, alignment, cell margins, layout, отступ (`indentTwips`)
 - `PageSetup`, `PaperSize`, `Orientation`, `Alignment`, `VerticalAlign`,
   `BorderStyle`, `Border`, `BorderSet`
 

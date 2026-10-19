@@ -350,6 +350,31 @@ final class BodyXmlBuilderTest extends TestCase
     }
 
     #[Test]
+    public function it_writes_table_indent_after_jc_and_before_borders(): void
+    {
+        $xml = (new BodyXmlBuilder)->render([
+            new Table([
+                new TableRow([new TableCell([new Paragraph([new Run('A')])])]),
+            ], new TableStyle(borders: BorderSet::none(), alignment: Alignment::Center, indentTwips: 360)),
+        ]);
+
+        self::assertStringContainsString(
+            '<w:jc w:val="center"/><w:tblInd w:w="360" w:type="dxa"/><w:tblBorders>',
+            $xml,
+        );
+    }
+
+    #[Test]
+    public function it_omits_table_indent_by_default(): void
+    {
+        $xml = (new BodyXmlBuilder)->render([
+            new Table([new TableRow([new TableCell([new Paragraph([new Run('A')])])])]),
+        ]);
+
+        self::assertStringNotContainsString('<w:tblInd', $xml);
+    }
+
+    #[Test]
     public function it_puts_numpr_after_keep_next_in_a_list_item(): void
     {
         $xml = (new BodyXmlBuilder)->render([
