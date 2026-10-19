@@ -19,6 +19,10 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   writer emits such a list as one Word multilevel numbering. A job
   description numbered `3.1 … 3.21` came out as `1 … 21` under every
   heading.
+- `Footnote::$sizePt`: the size a note is set in (from its runs in
+  `footnotes.xml`), written as `font-size` on `span.footnote` — notes are
+  usually 7–10 pt, and at the body's size a note took lines the page does
+  not have.
 - Each level keeps where Word places it (`ListNode::$indentLeftTwips`, from
   the numbering's `w:ind`): the serializer writes the list without the
   browser's nesting indent and moves every item by what its level adds.

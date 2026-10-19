@@ -582,7 +582,7 @@ final class BodyReader
                         $id = $child->getAttributeNS(OoxmlNs::W, 'id');
                         $text = ctype_digit(ltrim($id, '-')) ? $this->footnotes->text((int) $id) : null;
                         if ($text !== null) {
-                            $emitted[] = new Footnote($text);
+                            $emitted[] = new Footnote($text, $this->footnotes->size((int) $id));
                         }
                     }
                     break;

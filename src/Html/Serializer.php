@@ -234,7 +234,7 @@ final class Serializer
             $el instanceof Hyperlink => $this->renderHyperlink($el),
             $el instanceof Image => $this->renderImage($el),
             $el instanceof Bookmark => $this->renderBookmark($el),
-            $el instanceof Footnote => '<span class="footnote">'.$this->escape($el->content).'</span>',
+            $el instanceof Footnote => '<span class="footnote"'.($el->sizePt !== null ? ' style="font-size:'.rtrim(rtrim(sprintf('%.2f', $el->sizePt), '0'), '.').'pt"' : '').'>'.$this->escape($el->content).'</span>',
             $el instanceof Field => $this->renderField($el),
             $el instanceof PageBreak => '', // обычно split'ится в Paragraph
             default => '',
