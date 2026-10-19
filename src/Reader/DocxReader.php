@@ -54,9 +54,20 @@ final class DocxReader
         $body = $bodyReader->read($bodyEl);
         $pageSetup = (new SectionReader)->readPageSetup($bodyEl);
 
-        // Map path → type through the sectPr references.
-        $headerTypes = $this->resolveHeaderTypes($bodyEl, $pkg, isFooter: false);
-        $footerTypes = $this->resolveHeaderTypes($bodyEl, $pkg, isFooter: true);
+        // Map path → type through the references of the FIRST section: the
+        // document is read as one section, and its first pages are what the
+        // first section's parts govern. Taking the references of every
+        // section let a later section's parts win, and a first-page footer
+        // showed up where Word shows none.
+        $sectPr = $bodyEl->getElementsByTagNameNS(OoxmlNs::W, 'sectPr')->item(0);
+        $scope = $sectPr instanceof \DOMElement ? $sectPr : $bodyEl;
+        $headerTypes = $this->resolveHeaderTypes($scope, $pkg, isFooter: false);
+        $footerTypes = $this->resolveHeaderTypes($scope, $pkg, isFooter: true);
+        // Word shows the first-page parts only with <w:titlePg/>, the
+        // even-page ones only with <w:evenAndOddHeaders/> in the settings.
+        $usesFirst = $sectPr instanceof \DOMElement && self::onFlag($sectPr, 'titlePg');
+        $usesEven = $pkg->settingsXml?->documentElement instanceof \DOMElement
+            && self::onFlag($pkg->settingsXml->documentElement, 'evenAndOddHeaders');
 
         $headersBy = [
             'default' => [],
@@ -71,13 +82,13 @@ final class DocxReader
         $watermarkText = null;
 
         foreach ($pkg->headers as $partPath => $headerDoc) {
-            $type = $headerTypes[$partPath] ?? 'default';
+            $type = $headerTypes[$partPath] ?? null;
             // A watermark usually sits in the default header; extract it from any
             // one (the first found wins) so that HTML does not get duplicates.
             $watermarkText ??= (new WatermarkExtractor)->extract($headerDoc);
 
             $headerRoot = $headerDoc->documentElement;
-            if (! $headerRoot instanceof \DOMElement) {
+            if ($type === null || ! $headerRoot instanceof \DOMElement) {
                 continue;
             }
             $hImg = new ImageReader($pkg, $partPath);
@@ -86,9 +97,9 @@ final class DocxReader
         }
 
         foreach ($pkg->footers as $partPath => $footerDoc) {
-            $type = $footerTypes[$partPath] ?? 'default';
+            $type = $footerTypes[$partPath] ?? null;
             $footerRoot = $footerDoc->documentElement;
-            if (! $footerRoot instanceof \DOMElement) {
+            if ($type === null || ! $footerRoot instanceof \DOMElement) {
                 continue;
             }
             $fImg = new ImageReader($pkg, $partPath);
@@ -102,10 +113,10 @@ final class DocxReader
                 header: $headersBy['default'],
                 footer: $footersBy['default'],
                 pageSetup: $pageSetup,
-                firstHeader: $headersBy['first'],
-                firstFooter: $footersBy['first'],
-                evenHeader: $headersBy['even'],
-                evenFooter: $footersBy['even'],
+                firstHeader: $usesFirst ? $headersBy['first'] : [],
+                firstFooter: $usesFirst ? $footersBy['first'] : [],
+                evenHeader: $usesEven ? $headersBy['even'] : [],
+                evenFooter: $usesEven ? $footersBy['even'] : [],
             ),
             watermarkText: $watermarkText,
         );
@@ -144,6 +155,18 @@ final class DocxReader
         }
 
         return $out;
+    }
+
+    /** An on/off element among the children: present and not `w:val="0|false|off"`. */
+    private static function onFlag(\DOMElement $parent, string $name): bool
+    {
+        foreach ($parent->childNodes as $child) {
+            if ($child instanceof \DOMElement && $child->namespaceURI === OoxmlNs::W && $child->localName === $name) {
+                return ! in_array(strtolower($child->getAttributeNS(OoxmlNs::W, 'val')), ['0', 'false', 'off'], true);
+            }
+        }
+
+        return false;
     }
 
     /**

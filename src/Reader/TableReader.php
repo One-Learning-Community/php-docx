@@ -177,20 +177,10 @@ final class TableReader
         $tcPr = OoxmlNs::firstChild($tc, OoxmlNs::W, 'tcPr');
         $style = $this->readCellStyle($tcPr);
 
-        $children = [];
-        foreach ($tc->childNodes as $child) {
-            if (! $child instanceof \DOMElement || $child->namespaceURI !== OoxmlNs::W) {
-                continue;
-            }
-            if ($child->localName === 'p') {
-                foreach ($this->body->readParagraph($child) as $b) {
-                    $children[] = $b;
-                }
-            } elseif ($child->localName === 'tbl') {
-                $children[] = $this->read($child);
-            }
-            // tcPr — skip
-        }
+        // A cell holds what a body holds: paragraphs, lists, tables. Read
+        // paragraph by paragraph, its numbered and bulleted items lost their
+        // markers.
+        $children = $this->body->read($tc);
         if ($children === []) {
             $children = [new Paragraph([])];
         }

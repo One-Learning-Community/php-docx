@@ -42,6 +42,8 @@ final class NumberingReader
 
         // Concrete instances: numId → abstractNumId + overrides.
         $byNumId = [];
+        $abstractOf = [];
+        $restarts = [];
         foreach (OoxmlNs::children($root, OoxmlNs::W, 'num') as $num) {
             $numId = $num->getAttributeNS(OoxmlNs::W, 'numId');
             if ($numId === '' || ! ctype_digit($numId)) {
@@ -79,13 +81,17 @@ final class NumberingReader
             }
 
             $byNumId[(int) $numId] = $absLevels;
+            $abstractOf[(int) $numId] = (int) $abstractId;
+            if (OoxmlNs::children($num, OoxmlNs::W, 'lvlOverride') !== []) {
+                $restarts[(int) $numId] = true;
+            }
         }
 
-        return new NumberingDefinitions($byNumId);
+        return new NumberingDefinitions($byNumId, $abstractOf, $restarts);
     }
 
     /**
-     * @return array<int, array{format: ListFormat, startAt: int}>
+     * @return array<int, array{format: ListFormat, startAt: int, levelText: string|null, indentLeft: int|null}>
      */
     private function readAbstractLevels(\DOMElement $abstractNum): array
     {
@@ -102,12 +108,13 @@ final class NumberingReader
     }
 
     /**
-     * @return array{format: ListFormat, startAt: int}
+     * @return array{format: ListFormat, startAt: int, levelText: string|null, indentLeft: int|null}
      */
     private function readSingleLevel(\DOMElement $lvl): array
     {
         $numFmt = OoxmlNs::firstChild($lvl, OoxmlNs::W, 'numFmt');
         $start = OoxmlNs::firstChild($lvl, OoxmlNs::W, 'start');
+        $lvlText = OoxmlNs::firstChild($lvl, OoxmlNs::W, 'lvlText');
 
         $format = ListFormat::Decimal;
         if ($numFmt !== null) {
@@ -129,6 +136,26 @@ final class NumberingReader
             }
         }
 
-        return ['format' => $format, 'startAt' => $startAt];
+        // The level's own indent: where its text starts, the label hanging
+        // in front of it.
+        $indentLeft = null;
+        $pPr = OoxmlNs::firstChild($lvl, OoxmlNs::W, 'pPr');
+        $ind = $pPr !== null ? OoxmlNs::firstChild($pPr, OoxmlNs::W, 'ind') : null;
+        if ($ind !== null) {
+            foreach (['left', 'start'] as $attr) {
+                $v = $ind->getAttributeNS(OoxmlNs::W, $attr);
+                if ($v !== '' && is_numeric($v)) {
+                    $indentLeft = (int) $v;
+                    break;
+                }
+            }
+        }
+
+        return [
+            'format' => $format,
+            'startAt' => $startAt,
+            'levelText' => $lvlText !== null ? OoxmlNs::wVal($lvlText) : null,
+            'indentLeft' => $indentLeft,
+        ];
     }
 }

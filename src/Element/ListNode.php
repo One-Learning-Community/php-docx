@@ -25,6 +25,13 @@ final readonly class ListNode implements BlockElement
      *                                   $ordered.
      * @param  int  $startAt  The number to start from (default 1). Ignored for
      *                       bullet lists.
+     * @param  string|null  $levelText  Word's label pattern for this level
+     *                                  (`%1.%2.`, `4.%1.`): `%N` is the
+     *                                  number of level N. Null — the plain
+     *                                  `%1.` of the format.
+     * @param  string|null  $markerClass  The class that names this list
+     *                                    level in HTML: the label rule hangs
+     *                                    on it.
      */
     public function __construct(
         public array $items,
@@ -32,6 +39,14 @@ final readonly class ListNode implements BlockElement
         public int $levelStart = 0,
         public ?ListFormat $format = null,
         public int $startAt = 1,
+        public ?string $levelText = null,
+        public ?string $markerClass = null,
+        /**
+         * Where the level's text starts, in twips from the margin — Word
+         * places a level by its numbering, not by how deep it is nested.
+         * Null for the plain nesting indent.
+         */
+        public ?int $indentLeftTwips = null,
     ) {}
 
     public function effectiveFormat(): ListFormat

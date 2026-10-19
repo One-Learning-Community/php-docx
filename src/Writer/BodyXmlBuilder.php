@@ -99,12 +99,85 @@ final class BodyXmlBuilder
 
     private function renderListNode(ListNode $list): string
     {
+        if (self::carriesWordNumbering($list)) {
+            $levels = [];
+            self::collectLevels($list, 0, $levels);
+            $numId = $this->numbering->instanceForLevels($levels);
+            $this->usesNumbering = true;
+
+            return $this->renderTreeItems($list, $numId, 0);
+        }
+
         $numId = $this->numbering->instanceFor($list->effectiveFormat(), $list->startAt);
         $this->usesNumbering = true;
 
         $xml = '';
         foreach ($list->items as $item) {
             $xml .= $this->renderListItem($item, $numId, $list->levelStart);
+        }
+
+        return $xml;
+    }
+
+    /**
+     * Whether a list tree carries Word's own numbering — level patterns, or
+     * label-less parent items: it is then written as one multilevel
+     * numbering, as Word keeps it.
+     */
+    private static function carriesWordNumbering(ListNode $list): bool
+    {
+        if ($list->levelText !== null) {
+            return true;
+        }
+        foreach ($list->items as $item) {
+            if ($item->markerHidden || ($item->nestedList !== null && self::carriesWordNumbering($item->nestedList))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * The levels of a list tree: the first list met at each depth gives its
+     * format, start and pattern.
+     *
+     * @param  array<int, array{format: \Dskripchenko\PhpDocx\Element\ListFormat, startAt: int, levelText: string|null}>  $levels
+     */
+    private static function collectLevels(ListNode $list, int $depth, array &$levels): void
+    {
+        $levels[$depth] ??= ['format' => $list->effectiveFormat(), 'startAt' => $list->startAt, 'levelText' => $list->levelText];
+        foreach ($list->items as $item) {
+            if ($item->nestedList !== null) {
+                self::collectLevels($item->nestedList, $depth + 1, $levels);
+            }
+        }
+    }
+
+    /**
+     * The items of a tree as numbered paragraphs at their depth. A
+     * label-less parent item writes no paragraph of its own: its number is
+     * the start of its level, which the nested items show (`3.1.`).
+     */
+    private function renderTreeItems(ListNode $list, int $numId, int $depth): string
+    {
+        $xml = '';
+        foreach ($list->items as $item) {
+            if (! $item->markerHidden) {
+                $pPr = $this->renderParagraphProperties($item->style, null);
+                $numPr = '<w:numPr><w:ilvl w:val="'.min(8, $depth).'"/><w:numId w:val="'.$numId.'"/></w:numPr>';
+                $pPr = $pPr === ''
+                    ? '<w:pPr><w:pStyle w:val="ListParagraph"/>'.$numPr.'</w:pPr>'
+                    : (string) preg_replace('/^<w:pPr>/', '<w:pPr><w:pStyle w:val="ListParagraph"/>'.$numPr, $pPr, 1);
+                $children = '';
+                foreach ($item->children as $child) {
+                    $children .= $this->renderInline($child);
+                }
+                $xml .= '<w:p>'.$pPr.$children.'</w:p>';
+            }
+            if ($item->nestedList !== null) {
+                $xml .= $this->renderTreeItems($item->nestedList, $numId, $depth + 1);
+            }
         }
 
         return $xml;

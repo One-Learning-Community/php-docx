@@ -14,5 +14,9 @@ namespace Dskripchenko\PhpDocx\Element;
  */
 final readonly class Footnote implements InlineElement
 {
-    public function __construct(public string $content) {}
+    public function __construct(
+        public string $content,
+        /** The size the note is set in at the foot of the page; null for the consumer's own. */
+        public ?float $sizePt = null,
+    ) {}
 }

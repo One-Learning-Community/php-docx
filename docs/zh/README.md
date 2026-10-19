@@ -180,7 +180,7 @@ $imported->media;
 | 链接 | `<a href>` 外部，`<a href="#anchor">` 内部，`<a id>` 书签 |
 | 图片 | `<img src="data:image/...;base64,...">` |
 | 表格 | `<table>`、`<thead>/<tbody>`、`<tr>`、`<th>/<td>`、`<colgroup>/<col>`、`<caption>`、`colspan`、`rowspan` |
-| 列表 | `<ul>`、`<ol type="a/A/i/I" start="N">`、`<li value="N">`、`<dl>/<dt>/<dd>` |
+| 列表 | `<ul>`、`<ol type="a/A/i/I" start="N">`、`<li value="N">`、`<dl>/<dt>/<dd>`；`<style>` 中 `.class::marker { content: … counter(list-item) / counters(list-item, ".") … }` 形式的 Word 编号标签；仅包含嵌套列表的 `<li style="list-style-type:none">` 是无标签的父项（`3.` → `3.1.`） |
 | 自定义标签 | `<page-number/>`、`<page-total/>`、`<current-date format="...">`、`<page-break>` |
 | 布局 | `<hr>`、`<br>`、`<figure>/<figcaption>` |
 
@@ -441,10 +441,15 @@ $imported->watermarkText;
 $imported->pageSettings;
 $imported->variables;
 $imported->media;
+$imported->css;
 ```
 
-HTML 输出仅使用 inline 样式，可通过
-`Html\Converter::fromHtml($imported->bodyHtml)` 重新加载到同一个库。
+HTML 输出使用 inline 样式，并通过 `css` 提供 Word 多级编号的标签（`3.1.`、
+`4.1.`）：列表项类上的 `::marker` 规则，以及被段落打断的列表继续计数时的
+`<ol start>`。可通过
+`Html\Converter::fromHtml('<style>'.$imported->css.'</style>'.$imported->bodyHtml)`
+重新加载到同一个库；先内联 CSS 的应用可用 `Converter::markerStyleOf($html)`
+保留这些标签。
 
 ---
 
