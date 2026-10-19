@@ -290,6 +290,7 @@ $count = DocumentBuilder::new()->paragraph('你好')->toFile('out.docx');
 ->paragraph(fn ($p) => $p
     ->alignCenter()           // 或 alignRight() / alignJustify()
     ->styleId('Quote')        // StyleRegistry 中的样式 id
+    ->pageBreakBefore()       // 从新页开始；widowControl(false) 关闭孤行控制
     ->indentMm(left: 20, firstLine: 10)
     ->spacingPt(before: 6, after: 12)
     ->text('带缩进与间距')
@@ -565,7 +566,7 @@ foreach ($variables as $v) {
 样式位于 `Dskripchenko\PhpDocx\Style`：
 
 - `RunStyle` — 字体、weight、italic、color、size、highlight 等
-- `ParagraphStyle` — alignment、缩进、间距、边框
+- `ParagraphStyle` — alignment、缩进、间距、边框、分页（keepWithNext、keepLines、pageBreakBefore、widowControl）
 - `CellStyle` — width、padding、边框、valign、gridSpan、rowSpan
 - `TableStyle` — width、边框、对齐、单元格边距、布局
 - `PageSetup`、`PaperSize`、`Orientation`、`Alignment`、`VerticalAlign`、

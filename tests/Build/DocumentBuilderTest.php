@@ -247,4 +247,12 @@ final class DocumentBuilderTest extends TestCase
         self::assertSame('Quote', $p->styleId);
         self::assertNull((new ParagraphBuilder)->build()->styleId);
     }
+
+    #[Test]
+    public function paragraph_builder_sets_page_break_before_and_widow_control(): void
+    {
+        $p = (new ParagraphBuilder)->pageBreakBefore()->widowControl(false)->build();
+        self::assertTrue($p->style->pageBreakBefore);
+        self::assertFalse($p->style->widowControl);
+    }
 }

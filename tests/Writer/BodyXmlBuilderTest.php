@@ -228,6 +228,31 @@ final class BodyXmlBuilderTest extends TestCase
     }
 
     #[Test]
+    public function it_renders_page_break_before_and_widow_control_before_numpr(): void
+    {
+        $style = new ParagraphStyle(keepLines: true, pageBreakBefore: true, widowControl: true, borders: BorderSet::all(new Border));
+        $xml = (new BodyXmlBuilder)->render([new Paragraph([new Run('x')], $style, headingLevel: 1)]);
+        self::assertStringContainsString(
+            '<w:pStyle w:val="Heading1"/><w:keepLines/><w:pageBreakBefore/><w:widowControl/><w:pBdr>',
+            $xml,
+        );
+
+        $list = (new BodyXmlBuilder)->render([
+            new ListNode([
+                new ListItem([new Run('x')], style: new ParagraphStyle(pageBreakBefore: true, widowControl: false)),
+            ], ordered: true, levelText: '%1.'),
+        ]);
+        self::assertStringContainsString(
+            '<w:pStyle w:val="ListParagraph"/><w:pageBreakBefore/><w:widowControl w:val="0"/><w:numPr>',
+            $list,
+        );
+
+        $plain = (new BodyXmlBuilder)->render([new Paragraph([new Run('x')])]);
+        self::assertStringNotContainsString('pageBreakBefore', $plain);
+        self::assertStringNotContainsString('widowControl', $plain);
+    }
+
+    #[Test]
     public function it_renders_cant_split_row_before_header_and_height(): void
     {
         $xml = (new BodyXmlBuilder)->render([

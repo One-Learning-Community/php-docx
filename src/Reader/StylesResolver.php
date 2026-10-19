@@ -319,6 +319,8 @@ final class StylesResolver
             borders: $borders instanceof BorderSet ? $borders : null,
             shadingColor: $arr['shadingColor'] ?? null,
             keepLines: (bool) ($arr['keepLines'] ?? false),
+            pageBreakBefore: (bool) ($arr['pageBreakBefore'] ?? false),
+            widowControl: isset($arr['widowControl']) ? (bool) $arr['widowControl'] : null,
         );
     }
 

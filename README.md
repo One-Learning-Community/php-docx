@@ -378,6 +378,7 @@ Paragraph-level styling:
 ->paragraph(fn ($p) => $p
     ->alignCenter()           // or alignRight()/alignJustify()
     ->styleId('Quote')        // a style id from the StyleRegistry
+    ->pageBreakBefore()       // start on a new page; widowControl(false) turns widow control off
     ->indentMm(left: 20, firstLine: 10)
     ->spacingPt(before: 6, after: 12)
     ->text('Indented & spaced')
@@ -658,7 +659,7 @@ All elements live under `Dskripchenko\PhpDocx\Element` namespace.
 Styles live under `Dskripchenko\PhpDocx\Style`:
 
 - `RunStyle` — font, weight, italic, color, size, highlight, …
-- `ParagraphStyle` — alignment, indents, spacing, borders
+- `ParagraphStyle` — alignment, indents, spacing, borders, pagination (keepWithNext, keepLines, pageBreakBefore, widowControl)
 - `CellStyle` — width, padding, borders, valign, gridSpan, rowSpan
 - `TableStyle` — width, borders, alignment, cell margins, layout
 - `PageSetup`, `PaperSize`, `Orientation`, `Alignment`, `VerticalAlign`,

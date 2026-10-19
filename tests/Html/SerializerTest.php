@@ -104,6 +104,17 @@ final class SerializerTest extends TestCase
     }
 
     #[Test]
+    public function page_break_before_emits_break_before_page(): void
+    {
+        $doc = new Document(section: new Section([
+            new Paragraph([new Run('x')], new ParagraphStyle(pageBreakBefore: true)),
+            new Paragraph([new Run('y')]),
+        ]));
+        $html = (new Serializer)->serialize($doc)->bodyHtml;
+        self::assertSame(1, substr_count($html, 'break-before:page'));
+    }
+
+    #[Test]
     public function cant_split_row_emits_break_inside_avoid(): void
     {
         $cell = new TableCell([new Paragraph([new Run('x')])]);

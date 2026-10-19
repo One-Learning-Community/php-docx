@@ -17,6 +17,14 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `StyleRegistry::paragraph()`) is written as `<w:pStyle>`. Only `Heading1..6`
   (through `headingLevel`) could be referenced before. An explicit id wins
   over the heading level.
+- `ParagraphStyle::$pageBreakBefore` (`w:pageBreakBefore`) and
+  `ParagraphStyle::$widowControl` (`w:widowControl`; `null` leaves it to the
+  style, `false` writes `w:val="0"`), with `ParagraphBuilder::pageBreakBefore()`
+  and `widowControl()`. Both are written at their place in `w:pPr` and read
+  back. A page break before a paragraph no longer needs a `PageBreak` block and
+  its empty paragraph. HTML: `pageBreakBefore` is serialized as
+  `break-before: page`, and `break-before: page` / `page-break-before: always`
+  are parsed back.
 
 ### Fixed
 - A tab or a newline in run text was written as is inside `<w:t>`, where

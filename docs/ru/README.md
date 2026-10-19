@@ -295,6 +295,7 @@ $count = DocumentBuilder::new()->paragraph('Привет')->toFile('out.docx');
 ->paragraph(fn ($p) => $p
     ->alignCenter()           // alignRight()/alignJustify()
     ->styleId('Quote')        // id стиля из StyleRegistry
+    ->pageBreakBefore()       // с новой страницы; widowControl(false) выключает запрет висячих строк
     ->indentMm(left: 20, firstLine: 10)
     ->spacingPt(before: 6, after: 12)
     ->text('С отступами')
@@ -574,7 +575,7 @@ foreach ($variables as $v) {
 Стили — namespace `Dskripchenko\PhpDocx\Style`:
 
 - `RunStyle` — шрифт, weight, italic, color, size, highlight, …
-- `ParagraphStyle` — alignment, indents, spacing, borders
+- `ParagraphStyle` — alignment, indents, spacing, borders, разбиение на страницы (keepWithNext, keepLines, pageBreakBefore, widowControl)
 - `CellStyle` — width, padding, borders, valign, gridSpan, rowSpan
 - `TableStyle` — width, borders, alignment, cell margins, layout
 - `PageSetup`, `PaperSize`, `Orientation`, `Alignment`, `VerticalAlign`,

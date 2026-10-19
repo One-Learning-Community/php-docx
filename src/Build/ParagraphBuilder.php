@@ -165,6 +165,22 @@ final class ParagraphBuilder
         );
     }
 
+    /** The paragraph starts on a new page (`w:pageBreakBefore`). */
+    public function pageBreakBefore(bool $value = true): self
+    {
+        $this->style = $this->style->copy(pageBreakBefore: $value);
+
+        return $this;
+    }
+
+    /** Widow/orphan control (`w:widowControl`); `false` turns it off explicitly. */
+    public function widowControl(bool $value = true): self
+    {
+        $this->style = $this->style->copy(widowControl: $value);
+
+        return $this;
+    }
+
     public function borders(BorderSet $borders): self
     {
         $this->style = $this->style->copy(borders: $borders);

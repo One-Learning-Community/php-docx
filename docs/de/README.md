@@ -299,6 +299,7 @@ Absatz-Stil:
 ->paragraph(fn ($p) => $p
     ->alignCenter()           // oder alignRight()/alignJustify()
     ->styleId('Quote')        // eine Style-ID aus der StyleRegistry
+    ->pageBreakBefore()       // auf neuer Seite beginnen; widowControl(false) schaltet die Absatzkontrolle aus
     ->indentMm(left: 20, firstLine: 10)
     ->spacingPt(before: 6, after: 12)
     ->text('Eingerückt')
@@ -581,7 +582,7 @@ Alle Elemente leben unter `Dskripchenko\PhpDocx\Element`.
 Styles liegen unter `Dskripchenko\PhpDocx\Style`:
 
 - `RunStyle` — Schrift, Gewicht, Kursiv, Farbe, Grösse, Highlight, …
-- `ParagraphStyle` — Ausrichtung, Einzüge, Abstände, Rahmen
+- `ParagraphStyle` — Ausrichtung, Einzüge, Abstände, Rahmen, Seitenumbruch (keepWithNext, keepLines, pageBreakBefore, widowControl)
 - `CellStyle` — Breite, Padding, Rahmen, vertikale Ausrichtung,
   gridSpan, rowSpan
 - `TableStyle` — Breite, Rahmen, Ausrichtung, Zellenränder, Layout

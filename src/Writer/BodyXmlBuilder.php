@@ -248,6 +248,13 @@ final class BodyXmlBuilder
         if ($style->keepLines) {
             $pPr .= '<w:keepLines/>';
         }
+        if ($style->pageBreakBefore) {
+            $pPr .= '<w:pageBreakBefore/>';
+        }
+        // framePr would sit here; widowControl follows it.
+        if ($style->widowControl !== null) {
+            $pPr .= $style->widowControl ? '<w:widowControl/>' : '<w:widowControl w:val="0"/>';
+        }
         // numPr sits after keepNext/keepLines/pageBreakBefore and before pBdr in
         // CT_PPrBase; placing it here (not by prefixing the finished string)
         // keeps it there when those elements are written.
