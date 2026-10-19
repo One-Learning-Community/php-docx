@@ -234,6 +234,9 @@ final class BodyXmlBuilder
         } elseif ($numPr !== '') {
             $pPr .= '<w:pStyle w:val="ListParagraph"/>';
         }
+        if ($style->keepWithNext) {
+            $pPr .= '<w:keepNext/>';
+        }
         // numPr sits after keepNext/keepLines/pageBreakBefore and before pBdr in
         // CT_PPrBase; placing it here (not by prefixing the finished string)
         // keeps it there when those elements are written.

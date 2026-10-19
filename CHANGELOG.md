@@ -5,6 +5,13 @@ file. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- The writer now emits `w:keepNext` for `ParagraphStyle::$keepWithNext`. It was
+  read from DOCX and serialized to HTML, but dropped on the way back into a
+  DOCX, so a heading kept with its next paragraph lost the rule.
+
 ## [1.15.0] — 2026-10-19
 
 ### Added

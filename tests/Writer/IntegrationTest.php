@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Dskripchenko\PhpDocx\Tests\Writer;
 
+use Dskripchenko\PhpDocx\Document;
+use Dskripchenko\PhpDocx\Element\Paragraph;
+use Dskripchenko\PhpDocx\Element\Run;
 use Dskripchenko\PhpDocx\Html\Converter;
+use Dskripchenko\PhpDocx\Reader\DocxReader;
+use Dskripchenko\PhpDocx\Section;
+use Dskripchenko\PhpDocx\Style\ParagraphStyle;
 use Dskripchenko\PhpDocx\Writer\Word2007Writer;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -125,6 +131,22 @@ final class IntegrationTest extends TestCase
         self::assertStringContainsString('Иванов Иван Петрович', $xml);
         self::assertStringContainsString('<w:tblHeader/>', $xml);
         self::assertStringContainsString('<w:pBdr>', $xml);  // hr
+    }
+
+    #[Test]
+    public function keep_next_survives_a_write_and_read_roundtrip(): void
+    {
+        $doc = new Document(section: new Section([
+            new Paragraph([new Run('Heading')], new ParagraphStyle(keepWithNext: true)),
+            new Paragraph([new Run('Body')]),
+        ]));
+        $bytes = (new Word2007Writer)->write($doc);
+
+        self::assertStringContainsString('<w:pPr><w:keepNext/></w:pPr>', self::extractXml($bytes, 'word/document.xml'));
+
+        $read = (new DocxReader)->read($bytes);
+        self::assertTrue($read->section->body[0]->style->keepWithNext);
+        self::assertFalse($read->section->body[1]->style->keepWithNext);
     }
 
     private static function extractXml(string $bytes, string $internalPath): string

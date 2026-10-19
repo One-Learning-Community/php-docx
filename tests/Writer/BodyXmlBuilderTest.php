@@ -165,6 +165,35 @@ final class BodyXmlBuilderTest extends TestCase
     }
 
     #[Test]
+    public function it_renders_keep_next_after_pstyle_and_before_borders(): void
+    {
+        $style = new ParagraphStyle(
+            alignment: Alignment::Center,
+            borders: BorderSet::all(new Border),
+            keepWithNext: true,
+        );
+        $xml = (new BodyXmlBuilder)->render([new Paragraph([new Run('x')], $style, headingLevel: 2)]);
+
+        self::assertStringContainsString('<w:pPr><w:pStyle w:val="Heading2"/><w:keepNext/><w:pBdr>', $xml);
+        self::assertLessThan(strpos($xml, '<w:jc'), strpos($xml, '<w:keepNext/>'));
+
+        $plain = (new BodyXmlBuilder)->render([new Paragraph([new Run('x')])]);
+        self::assertStringNotContainsString('keepNext', $plain);
+    }
+
+    #[Test]
+    public function it_puts_numpr_after_keep_next_in_a_list_item(): void
+    {
+        $xml = (new BodyXmlBuilder)->render([
+            new ListNode([
+                new ListItem([new Run('x')], style: new ParagraphStyle(alignment: Alignment::Center, keepWithNext: true)),
+            ], ordered: true, levelText: '%1.'),
+        ]);
+
+        self::assertStringContainsString('<w:pPr><w:pStyle w:val="ListParagraph"/><w:keepNext/><w:numPr>', $xml);
+    }
+
+    #[Test]
     public function it_places_numpr_before_the_other_properties_of_a_list_item(): void
     {
         // CT_PPrBase is a sequence: pStyle, numPr, pBdr, shd, spacing, ind, jc.
