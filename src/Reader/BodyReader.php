@@ -50,6 +50,15 @@ final class BodyReader
 {
     private ?TableReader $tableReader = null;
 
+    /**
+     * The running numbers of the lists, by counter key and level: Word
+     * numbers on across lists of one numbering, so a list broken off by a
+     * paragraph continues where it stopped.
+     *
+     * @var array<string, array<int, int>>
+     */
+    private array $counters = [];
+
     public function __construct(
         private readonly StylesResolver $styles = new StylesResolver,
         private readonly NumberingDefinitions $numbering = new NumberingDefinitions,
@@ -164,13 +173,57 @@ final class BodyReader
             // It should not happen — but a fallback.
             return new ListNode([]);
         }
-        $minIlvl = $this->minIlvl($items);
-        $root = $this->buildRecursive($items, 0, count($items), $minIlvl, $numId);
+        $key = $this->numbering->counterKey($numId);
+        $before = $this->counters[$key] ?? [];
+
+        // A list that starts below the top level, after the list was broken
+        // off: it hangs under its parent's number (3. → 3.1.) through
+        // label-less wrapper items, as deep as the counters go.
+        // The same when the level's label names the levels above it (`%1.%2.`)
+        // with none of them met yet: Word shows their starts there.
+        $depth = $this->minIlvl($items);
+        while ($depth > 0 && (isset($before[$depth - 1]) || $this->namesUpperLevel($numId, $depth))) {
+            $depth--;
+        }
+
+        // Every item's number: on from the last one of its level, a higher
+        // level restarting the deeper ones.
+        foreach ($items as $i => $item) {
+            $level = $item['ilvl'];
+            $counters = $this->counters[$key] ?? [];
+            $counters[$level] = isset($counters[$level]) ? $counters[$level] + 1 : $this->numbering->startAtFor($numId, $level);
+            foreach (array_keys($counters) as $deeper) {
+                if ($deeper > $level) {
+                    unset($counters[$deeper]);
+                }
+            }
+            $this->counters[$key] = $counters;
+            $items[$i]['number'] = $counters[$level];
+        }
+
+        $root = $this->buildRecursive($items, 0, count($items), $depth, $numId, $before);
         if ($root instanceof ListNode) {
             return $root;
         }
 
         return new ListNode([]);
+    }
+
+    /** Whether a level's label pattern shows a level above it (`%1` in `%1.%2.`). */
+    private function namesUpperLevel(int $numId, int $level): bool
+    {
+        $text = $this->numbering->levelTextFor($numId, $level) ?? '';
+
+        if (preg_match_all('/%([1-9])/', $text, $m) === 0) {
+            return false;
+        }
+        foreach ($m[1] as $named) {
+            if ((int) $named <= $level) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -193,11 +246,13 @@ final class BodyReader
      * items with ilvl == depth become siblings inside the current ListNode; the
      * items with ilvl > depth are nested inside the previous sibling.
      *
-     * @param  list<array{numId:int, ilvl:int, inlines:list<InlineElement>, style:ParagraphStyle}>  $items
+     * @param  list<array{numId:int, ilvl:int, inlines:list<InlineElement>, style:ParagraphStyle, number?:int}>  $items
+     * @param  array<int, int>  $before  The counters as they stood before this list: a wrapper item shows its parent's number.
      */
-    private function buildRecursive(array $items, int $from, int $to, int $depth, int $numId): ListNode
+    private function buildRecursive(array $items, int $from, int $to, int $depth, int $numId, array $before = []): ListNode
     {
         $siblings = [];
+        $startAt = null;
         $i = $from;
         while ($i < $to) {
             $cur = $items[$i];
@@ -210,14 +265,16 @@ final class BodyReader
                 while ($j < $to && $items[$j]['ilvl'] > $depth) {
                     $j++;
                 }
-                $nested = $this->buildRecursive($items, $i, $j, $depth + 1, $numId);
+                $nested = $this->buildRecursive($items, $i, $j, $depth + 1, $numId, $before);
                 // Attach it as the nestedList of the last sibling, when there is one.
                 if ($siblings !== []) {
                     $last = $siblings[count($siblings) - 1];
                     $siblings[count($siblings) - 1] = new ListItem($last->children, $nested, $last->style);
                 } else {
-                    // There is no previous sibling — we wrap it into an empty parent item.
-                    $siblings[] = new ListItem([], $nested);
+                    // There is no previous sibling: a label-less parent item
+                    // that carries the parent's number.
+                    $siblings[] = new ListItem([], $nested, markerHidden: true);
+                    $startAt ??= $before[$depth] ?? $this->numbering->startAtFor($numId, $depth);
                 }
                 $i = $j;
 
@@ -225,19 +282,21 @@ final class BodyReader
             }
             // ilvl == depth — an ordinary sibling.
             $siblings[] = new ListItem($cur['inlines'], null, $cur['style']);
+            $startAt ??= $cur['number'] ?? null;
             $i++;
         }
 
         $format = $this->numbering->formatFor($numId, $depth);
-        $startAt = $this->numbering->startAtFor($numId, $depth);
         $ordered = $this->numbering->isOrdered($numId, $depth);
 
         return new ListNode(
             items: $siblings,
             ordered: $ordered,
-            levelStart: 0, // дочерние уровни сами знают свой ilvl через nesting
+            levelStart: 0, // the nested levels know their ilvl through the nesting
             format: $format,
-            startAt: $startAt,
+            startAt: $startAt ?? $this->numbering->startAtFor($numId, $depth),
+            levelText: $ordered ? $this->numbering->levelTextFor($numId, $depth) : null,
+            markerClass: $ordered ? 'wl'.$numId.'-'.$depth : null,
         );
     }
 

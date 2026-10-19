@@ -40,5 +40,11 @@ final readonly class ImportedDocument
         public PageSetup $pageSettings = new PageSetup,
         public array $variables = [],
         public array $media = [],
+        /**
+         * The style sheet the HTML needs beyond inline styles: the list labels
+         * of Word's numbering (`3.1.`, `4.1.`) as `::marker` rules on the
+         * classes of the list items. Empty when there are none.
+         */
+        public string $css = '',
     ) {}
 }

@@ -187,7 +187,7 @@ Das Eingabe-HTML darf **nur Inline-Styles** verwenden (keine
 | Links | `<a href>` extern, `<a href="#anchor">` intern, `<a id>` Lesezeichen |
 | Bilder | `<img src="data:image/...;base64,...">` |
 | Tabellen | `<table>`, `<thead>/<tbody>`, `<tr>`, `<th>/<td>`, `<colgroup>/<col>`, `<caption>`, `colspan`, `rowspan` |
-| Listen | `<ul>`, `<ol type="a/A/i/I" start="N">`, `<li value="N">`, `<dl>/<dt>/<dd>` |
+| Listen | `<ul>`, `<ol type="a/A/i/I" start="N">`, `<li value="N">`, `<dl>/<dt>/<dd>`; Nummerierungsbeschriftungen von Word aus `.class::marker { content: … counter(list-item) / counters(list-item, ".") … }` in einem `<style>`; ein `<li style="list-style-type:none">` nur mit einer verschachtelten Liste ist ein Elternteil ohne Beschriftung (`3.` → `3.1.`) |
 | Eigene Tags | `<page-number/>`, `<page-total/>`, `<current-date format="...">`, `<page-break>` |
 | Layout | `<hr>`, `<br>`, `<figure>/<figcaption>` |
 
@@ -452,11 +452,16 @@ $imported->watermarkText;
 $imported->pageSettings;
 $imported->variables;
 $imported->media;
+$imported->css;
 ```
 
-Die HTML-Ausgabe verwendet nur Inline-Styles und ist über
-`Html\Converter::fromHtml($imported->bodyHtml)` wieder in dieselbe
-Bibliothek ladbar.
+Die HTML-Ausgabe verwendet Inline-Styles und `css` für die Beschriftungen
+der mehrstufigen Nummerierung von Word (`3.1.`, `4.1.`): `::marker`-Regeln
+auf den Klassen der Listeneinträge, dazu `<ol start>`, wo eine durch einen
+Absatz unterbrochene Liste weiterzählt. Wieder ladbar über
+`Html\Converter::fromHtml('<style>'.$imported->css.'</style>'.$imported->bodyHtml)`;
+eine Anwendung, die CSS vorher inline setzt, behält die Beschriftungen mit
+`Converter::markerStyleOf($html)`.
 
 ---
 

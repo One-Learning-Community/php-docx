@@ -34,6 +34,14 @@ final class NumberingXmlBuilder
 
     private int $nextNumId = 3;
 
+    /**
+     * Numberings of their own, one per list tree that carries Word's level
+     * patterns: numId → its levels.
+     *
+     * @var array<int, array<int, array{format: ListFormat, startAt: int, levelText: string|null}>>
+     */
+    private array $treeInstances = [];
+
     private bool $used = false;
 
     public function isUsed(): bool
@@ -65,6 +73,23 @@ final class NumberingXmlBuilder
         return $this->instanceMap[$key];
     }
 
+    /**
+     * Registers a numbering of its own for one list tree: every level with
+     * its format, start and label pattern (`%1.%2.`). Lists broken off and
+     * continued carry their numbers in the starts, so every tree is
+     * independent.
+     *
+     * @param  array<int, array{format: ListFormat, startAt: int, levelText: string|null}>  $levels
+     */
+    public function instanceForLevels(array $levels): int
+    {
+        $this->used = true;
+        $numId = $this->nextNumId++;
+        $this->treeInstances[$numId] = $levels;
+
+        return $numId;
+    }
+
     public function render(): string
     {
         $xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
@@ -83,6 +108,12 @@ final class NumberingXmlBuilder
             $abstractIdCursor++;
         }
 
+        foreach ($this->treeInstances as $numId => $levels) {
+            $xml .= $this->renderTreeAbstractNum($abstractIdCursor, $levels);
+            $xml .= '<w:num w:numId="'.$numId.'"><w:abstractNumId w:val="'.$abstractIdCursor.'"/></w:num>';
+            $abstractIdCursor++;
+        }
+
         // The standard concrete instances come after the custom ones — the
         // order does not matter to Word or Pages.
         $xml .= '<w:num w:numId="'.self::BULLET_NUM_ID.'"><w:abstractNumId w:val="0"/></w:num>';
@@ -91,6 +122,31 @@ final class NumberingXmlBuilder
         $xml .= '</w:numbering>';
 
         return $xml;
+    }
+
+    /**
+     * @param  array<int, array{format: ListFormat, startAt: int, levelText: string|null}>  $levels
+     */
+    private function renderTreeAbstractNum(int $id, array $levels): string
+    {
+        $bullets = ['●', '○', '■'];
+        $deepest = $levels === [] ? 0 : max(array_keys($levels));
+        $xml = '<w:abstractNum w:abstractNumId="'.$id.'"><w:multiLevelType w:val="multilevel"/>';
+        for ($lvl = 0; $lvl <= min(8, $deepest); $lvl++) {
+            $level = $levels[$lvl] ?? ['format' => ListFormat::Decimal, 'startAt' => 1, 'levelText' => null];
+            $bullet = $level['format'] === ListFormat::Bullet;
+            $text = $bullet ? ($bullets[$lvl % 3]) : ($level['levelText'] ?? '%'.($lvl + 1).'.');
+            $xml .= '<w:lvl w:ilvl="'.$lvl.'">'
+                .'<w:start w:val="'.max(1, $level['startAt']).'"/>'
+                .'<w:numFmt w:val="'.$level['format']->value.'"/>'
+                .'<w:lvlText w:val="'.XmlEscape::attr($text).'"/>'
+                .'<w:lvlJc w:val="left"/>'
+                .'<w:pPr><w:ind w:left="'.(720 + $lvl * 360).'" w:hanging="360"/></w:pPr>'
+                .($bullet ? '<w:rPr><w:rFonts w:ascii="Symbol" w:hAnsi="Symbol" w:hint="default"/></w:rPr>' : '')
+                .'</w:lvl>';
+        }
+
+        return $xml.'</w:abstractNum>';
     }
 
     private function renderBulletAbstractNum(int $id): string

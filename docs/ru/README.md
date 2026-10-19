@@ -185,7 +185,7 @@ $imported->media;
 | Ссылки | `<a href>` внешние, `<a href="#anchor">` внутренние, `<a id>` bookmarks |
 | Картинки | `<img src="data:image/...;base64,...">` |
 | Таблицы | `<table>`, `<thead>/<tbody>`, `<tr>`, `<th>/<td>`, `<colgroup>/<col>`, `<caption>`, `colspan`, `rowspan` |
-| Списки | `<ul>`, `<ol type="a/A/i/I" start="N">`, `<li value="N">`, `<dl>/<dt>/<dd>` |
+| Списки | `<ul>`, `<ol type="a/A/i/I" start="N">`, `<li value="N">`, `<dl>/<dt>/<dd>`; метки нумерации Word из `.class::marker { content: … counter(list-item) / counters(list-item, ".") … }` в `<style>`; `<li style="list-style-type:none">` только со вложенным списком — родитель без метки (`3.` → `3.1.`) |
 | Custom-теги | `<page-number/>`, `<page-total/>`, `<current-date format="...">`, `<page-break>` |
 | Layout | `<hr>`, `<br>`, `<figure>/<figcaption>` |
 
@@ -446,10 +446,16 @@ $imported->watermarkText;
 $imported->pageSettings;
 $imported->variables;
 $imported->media;
+$imported->css;
 ```
 
-HTML-output использует только inline-стили — можно подгрузить обратно
-через `Html\Converter::fromHtml($imported->bodyHtml)`.
+HTML-output использует inline-стили и `css` для меток многоуровневой
+нумерации Word (`3.1.`, `4.1.`): правила `::marker` на классах пунктов
+списка и `<ol start>` там, где прерванный абзацем список продолжает счёт.
+Подгрузить обратно —
+`Html\Converter::fromHtml('<style>'.$imported->css.'</style>'.$imported->bodyHtml)`;
+приложение, которое сначала встраивает CSS, сохраняет метки через
+`Converter::markerStyleOf($html)`.
 
 ---
 

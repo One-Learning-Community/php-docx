@@ -71,6 +71,9 @@ final class Serializer
 
     private int $mediaCounter = 0;
 
+    /** @var array<string, string> list-level class → its `::marker` content */
+    private array $markerRules = [];
+
     /**
      * @param  list<DetectedVariable>  $variables  An optional list of variables
      *         (when the caller ran VariableDetector separately).
@@ -79,6 +82,7 @@ final class Serializer
     {
         $this->media = [];
         $this->mediaCounter = 0;
+        $this->markerRules = [];
 
         $bodyHtml = $this->renderBlocks($document->section->body);
         $headerHtml = $document->section->header !== []
@@ -104,7 +108,67 @@ final class Serializer
             pageSettings: $document->section->pageSetup,
             variables: $variables,
             media: $this->media,
+            css: $this->markerCss(),
         );
+    }
+
+    /** The `::marker` rules of the list levels met, one per class. */
+    private function markerCss(): string
+    {
+        $css = '';
+        foreach ($this->markerRules as $class => $content) {
+            $css .= '.'.$class.'::marker { content: '.$content." }\n";
+        }
+
+        return $css;
+    }
+
+    /**
+     * Word's label pattern as CSS `content` for a list level: `%1.%2.` is
+     * `counters(list-item, ".")` plus the trailing `.`, `4.%1.` is a string
+     * around `counter(list-item)`. Null for the plain `%N.` the browser
+     * draws anyway, and for patterns CSS cannot say (`%1-%3`).
+     */
+    private static function markerContent(ListNode $list, int $depth): ?string
+    {
+        $text = $list->levelText;
+        if ($text === null) {
+            return null;
+        }
+        $parts = preg_split('/%([1-9])/', $text, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [];
+        $literals = [];
+        $levels = [];
+        foreach ($parts as $i => $part) {
+            if ($i % 2 === 0) {
+                $literals[] = $part;
+            } else {
+                $levels[] = (int) $part;
+            }
+        }
+        $style = match ($list->effectiveFormat()) {
+            \Dskripchenko\PhpDocx\Element\ListFormat::LowerLetter => 'lower-alpha',
+            \Dskripchenko\PhpDocx\Element\ListFormat::UpperLetter => 'upper-alpha',
+            \Dskripchenko\PhpDocx\Element\ListFormat::LowerRoman => 'lower-roman',
+            \Dskripchenko\PhpDocx\Element\ListFormat::UpperRoman => 'upper-roman',
+            default => null,
+        };
+        $prefix = $literals[0];
+        $suffix = $literals[count($literals) - 1];
+        $quote = static fn (string $s): string => '"'.str_replace(['\\', '"'], ['\\\\', '\\"'], $s).'"';
+        $styleArg = $style !== null ? ', '.$style : '';
+
+        if ($levels === [$depth + 1]) {
+            if ($prefix === '' && $suffix === '.') {
+                return null; // the browser's own label
+            }
+            $counter = 'counter(list-item'.$styleArg.')';
+        } elseif ($levels === range(1, $depth + 1) && count(array_unique(array_slice($literals, 1, -1))) === 1) {
+            $counter = 'counters(list-item, '.$quote($literals[1]).$styleArg.')';
+        } else {
+            return null;
+        }
+
+        return trim(($prefix !== '' ? $quote($prefix).' ' : '').$counter.' '.$quote($suffix.' '));
     }
 
     /**
@@ -332,7 +396,7 @@ final class Serializer
         return 'data:'.$mime.';base64,'.base64_encode($bytes);
     }
 
-    private function renderList(ListNode $list): string
+    private function renderList(ListNode $list, int $depth = 0): string
     {
         $tag = $list->ordered ? 'ol' : 'ul';
         $attrs = '';
@@ -345,9 +409,14 @@ final class Serializer
                 $attrs .= ' start="'.$list->startAt.'"';
             }
         }
+        $class = null;
+        if ($list->ordered && $list->markerClass !== null && ($content = self::markerContent($list, $depth)) !== null) {
+            $class = $list->markerClass;
+            $this->markerRules[$class] = $content;
+        }
         $items = '';
         foreach ($list->items as $item) {
-            $items .= $this->renderListItem($item);
+            $items .= $this->renderListItem($item, $class, $depth);
         }
 
         return '<'.$tag.$attrs.'>'.$items.'</'.$tag.'>';
@@ -364,12 +433,19 @@ final class Serializer
         };
     }
 
-    private function renderListItem(ListItem $item): string
+    private function renderListItem(ListItem $item, ?string $class = null, int $depth = 0): string
     {
         $inner = $this->renderInlines($item->children);
-        $nested = $item->nestedList !== null ? $this->renderList($item->nestedList) : '';
+        $nested = $item->nestedList !== null ? $this->renderList($item->nestedList, $depth + 1) : '';
         $css = $this->paragraphStyleCss($item->style);
-        $attrs = $css !== '' ? ' style="'.$css.'"' : '';
+        // An item that only carries a nested list shows no label: it stands
+        // for a parent outside the list, and its number is what the nested
+        // one counts on from.
+        if ($item->markerHidden) {
+            $css = trim('list-style-type:none;'.$css, ';');
+        }
+        $attrs = ($class !== null && ! $item->markerHidden ? ' class="'.$class.'"' : '')
+            .($css !== '' ? ' style="'.$css.'"' : '');
 
         return '<li'.$attrs.'>'.$inner.$nested.'</li>';
     }

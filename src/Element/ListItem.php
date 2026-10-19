@@ -28,5 +28,12 @@ final readonly class ListItem
          * diverged from the original in how it broke into pages.
          */
         public ParagraphStyle $style = new ParagraphStyle,
+        /**
+         * An item that only carries a nested list and shows no label of its
+         * own: it stands for a parent item outside this list, so that the
+         * nested one numbers on from it (`3.1.` after a paragraph that broke
+         * the list off at `3.`).
+         */
+        public bool $markerHidden = false,
     ) {}
 }

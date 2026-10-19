@@ -115,12 +115,6 @@ parameters:
 			path: src/Reader/DocxReader.php
 
 		-
-			message: '#^Parameter \#1 \$byNumId of class Dskripchenko\\PhpDocx\\Reader\\NumberingDefinitions constructor expects array\<int, array\<int, array\{format\: Dskripchenko\\PhpDocx\\Element\\ListFormat, startAt\: int\}\>\>, array\<int, array\<int, array\{format\?\: Dskripchenko\\PhpDocx\\Element\\ListFormat, startAt\: int\}\>\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Reader/NumberingReader.php
-
-		-
 			message: '#^Parameter \#1 \$key of function array_key_exists expects int\|string, string\|null given\.$#'
 			identifier: argument.type
 			count: 1

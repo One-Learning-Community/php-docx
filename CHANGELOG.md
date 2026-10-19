@@ -7,6 +7,19 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- Word's multilevel numbering through HTML. The reader counts lists on the
+  way Word does — a list broken off by a paragraph continues (`<ol start>`),
+  a level below hangs under its parent's number through a label-less parent
+  item (`ListItem::$markerHidden`) — and keeps each level's label pattern
+  (`ListNode::$levelText`: `%1.%2.`, `4.%1.`). The serializer writes the
+  labels as `::marker` rules on per-level classes into
+  `ImportedDocument::$css`; the converter reads them back from `<style>`
+  (`Converter::markerStyleOf()` carries them past a CSS inliner), and the
+  writer emits such a list as one Word multilevel numbering. A job
+  description numbered `3.1 … 3.21` came out as `1 … 21` under every
+  heading.
+
 ### Fixed
 - Reading headers and footers took the references of every section, and a
   later section's part won: a seven-page form came out with the footer of

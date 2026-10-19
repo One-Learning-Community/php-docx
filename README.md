@@ -247,7 +247,7 @@ CSS-inliner upstream if needed.
 | Links | `<a href>` external, `<a href="#anchor">` internal, `<a id>` bookmarks |
 | Images | `<img src="data:image/...;base64,...">` |
 | Tables | `<table>`, `<thead>/<tbody>`, `<tr>`, `<th>/<td>`, `<colgroup>/<col>`, `<caption>`, `colspan`, `rowspan` |
-| Lists | `<ul>`, `<ol type="a/A/i/I" start="N">`, `<li value="N">`, `<dl>/<dt>/<dd>` |
+| Lists | `<ul>`, `<ol type="a/A/i/I" start="N">`, `<li value="N">`, `<dl>/<dt>/<dd>`; Word numbering labels from `.class::marker { content: … counter(list-item) / counters(list-item, ".") … }` in a `<style>`; `<li style="list-style-type:none">` holding only a nested list is a label-less parent (`3.` → `3.1.`) |
 | Custom tags | `<page-number/>`, `<page-total/>`, `<current-date format="...">`, `<page-break>` |
 | Marker classes | `class="page-number"`, `class="page-total"`, `class="page-break"` — same fields, spelled so an HTML sanitizer keeps them |
 | Layout | `<hr>`, `<br>`, `<figure>/<figcaption>` |
@@ -530,10 +530,16 @@ $imported->watermarkText;    // ?string
 $imported->pageSettings;     // PageSetup
 $imported->variables;        // list<DetectedVariable>
 $imported->media;            // array<filename, bytes>
+$imported->css;              // string — ::marker rules of Word's numbering labels
 ```
 
-HTML output uses inline styles only — re-loadable into the same library
-via `Html\Converter::fromHtml($imported->bodyHtml)`.
+HTML output uses inline styles, plus `css` for the labels of Word's
+multilevel numbering (`3.1.`, `4.1.`): `::marker` rules on the classes of
+the list items, with `<ol start>` where a list broken off by a paragraph
+numbers on. Re-loadable into the same library via
+`Html\Converter::fromHtml('<style>'.$imported->css.'</style>'.$imported->bodyHtml)`;
+an application that inlines CSS first keeps the labels with
+`Converter::markerStyleOf($html)`.
 
 ---
 

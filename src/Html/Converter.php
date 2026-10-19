@@ -52,6 +52,14 @@ final class Converter
     /** The tags that turn into a BlockElement or cause one to be split. */
     private const BLOCK_TAGS = ['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'hr', 'ul', 'ol', 'blockquote', 'pagebreak', 'pre', 'dl', 'figure', 'section', 'article', 'aside', 'header', 'footer', 'nav', 'main'];
 
+    /**
+     * The `::marker` contents of the style sheets, by class: the list labels
+     * an import from Word writes (`.wl5-1::marker { content: counters(…) }`).
+     *
+     * @var array<string, string>
+     */
+    private array $markerRules = [];
+
     public function __construct(
         private readonly PageSetup $defaultPageSetup = new PageSetup,
         /**
@@ -76,11 +84,14 @@ final class Converter
         ?string $watermarkText = null,
     ): Document {
         $pre = $this->preprocessor ?? new CssInlinerPreprocessor;
+        // An inliner drops the rules it cannot put on an element; the list
+        // labels (`::marker`) are carried past it.
+        $keep = static fn (string $html): string => self::markerStyleOf($html).$pre->preprocess($html);
 
         return $this->fromHtml(
-            $pre->preprocess($body),
-            $header !== null ? $pre->preprocess($header) : null,
-            $footer !== null ? $pre->preprocess($footer) : null,
+            $keep($body),
+            $header !== null ? $keep($header) : null,
+            $footer !== null ? $keep($footer) : null,
             $pageSetup,
             $watermarkText,
         );
@@ -117,6 +128,10 @@ final class Converter
         $body = $doc->getElementsByTagName('body')->item(0);
         if (! $body instanceof \DOMElement) {
             return [];
+        }
+        $this->markerRules = [];
+        foreach ($doc->getElementsByTagName('style') as $style) {
+            $this->markerRules = array_merge($this->markerRules, self::markerRules($style->textContent));
         }
 
         // The body's inline style is the basis for every child. We simulate
@@ -163,6 +178,10 @@ final class Converter
             }
 
             $tag = strtolower($child->tagName);
+            // A style sheet is read for the list labels, never printed.
+            if ($tag === 'style' || $tag === 'script') {
+                continue;
+            }
             if (in_array($tag, self::BLOCK_TAGS, true)) {
                 $flushInline();
                 $produced = $this->processBlockElement($child, $runStyle, $paraStyle);
@@ -879,7 +898,7 @@ final class Converter
     /**
      * @return list<BlockElement>
      */
-    private function parseList(\DOMElement $node, RunStyle $runStyle, ParagraphStyle $paraStyle, bool $ordered): array
+    private function parseList(\DOMElement $node, RunStyle $runStyle, ParagraphStyle $paraStyle, bool $ordered, int $depth = 0): array
     {
         $type = $ordered ? ($node->getAttribute('type') ?: null) : null;
         $format = ListFormat::fromHtmlType($type, $ordered);
@@ -897,6 +916,7 @@ final class Converter
         }
 
         $items = [];
+        $levelText = null;
         foreach ($node->childNodes as $child) {
             if (! $child instanceof \DOMElement) {
                 continue;
@@ -904,13 +924,14 @@ final class Converter
             if (strtolower($child->tagName) !== 'li') {
                 continue;
             }
-            $items[] = $this->parseListItem($child, $runStyle);
+            $items[] = $this->parseListItem($child, $runStyle, $depth);
+            $levelText ??= $ordered ? $this->levelTextOf($child, $depth) : null;
         }
         if ($items === []) {
             return [];
         }
 
-        return [new ListNode($items, ordered: $ordered, format: $format, startAt: $startAt)];
+        return [new ListNode($items, ordered: $ordered, format: $format, startAt: $startAt, levelText: $levelText)];
     }
 
     private function findFirstChild(\DOMElement $node, string $tagName): ?\DOMElement
@@ -924,7 +945,7 @@ final class Converter
         return null;
     }
 
-    private function parseListItem(\DOMElement $li, RunStyle $runStyle): ListItem
+    private function parseListItem(\DOMElement $li, RunStyle $runStyle, int $depth = 0): ListItem
     {
         $inlines = [];
         $nestedList = null;
@@ -945,7 +966,7 @@ final class Converter
                 // A nested list — we take the first one encountered. parseList
                 // reads the type and the start of the nested <ol> itself.
                 if ($nestedList === null) {
-                    $produced = $this->parseList($child, $runStyle, new ParagraphStyle, ordered: $tag === 'ol');
+                    $produced = $this->parseList($child, $runStyle, new ParagraphStyle, ordered: $tag === 'ol', depth: $depth + 1);
                     if ($produced !== [] && $produced[0] instanceof ListNode) {
                         $nestedList = $produced[0];
                     }
@@ -958,7 +979,92 @@ final class Converter
             }
         }
 
-        return new ListItem(children: $this->trimInline($inlines), nestedList: $nestedList);
+        $inlines = $this->trimInline($inlines);
+        $css = InlineStyleParser::parse($li->getAttribute('style'));
+        $noMarker = strtolower(trim($css['list-style-type'] ?? ($css['list-style'] ?? ''))) === 'none';
+
+        return new ListItem(
+            children: $inlines,
+            nestedList: $nestedList,
+            // A label-less item that only carries a nested list stands for a
+            // parent outside the list (the nested one numbers on from it).
+            markerHidden: $noMarker && $inlines === [] && $nestedList !== null,
+        );
+    }
+
+    /**
+     * Word's label pattern of a list level out of its item's `::marker`
+     * rule: `counters(list-item, ".")` at depth 1 is `%1.%2`, a
+     * `counter(list-item)` is the level's own `%N`, strings stay as they
+     * are. Null without a rule, or with a content it cannot say.
+     */
+    private function levelTextOf(\DOMElement $li, int $depth): ?string
+    {
+        foreach (preg_split('/\s+/', trim($li->getAttribute('class'))) ?: [] as $class) {
+            $content = $this->markerRules[$class] ?? null;
+            if ($content === null) {
+                continue;
+            }
+            $text = '';
+            $rest = trim($content);
+            while ($rest !== '') {
+                if (preg_match('/^"((?:[^"\\\\]|\\\\.)*)"\s*/', $rest, $m) === 1) {
+                    $text .= stripcslashes($m[1]);
+                } elseif (preg_match('/^counters\(\s*list-item\s*,\s*"((?:[^"\\\\]|\\\\.)*)"\s*(?:,\s*[\w-]+\s*)?\)\s*/', $rest, $m) === 1) {
+                    $text .= implode(stripcslashes($m[1]), array_map(static fn (int $l): string => '%'.$l, range(1, $depth + 1)));
+                } elseif (preg_match('/^counter\(\s*list-item\s*(?:,\s*[\w-]+\s*)?\)\s*/', $rest, $m) === 1) {
+                    $text .= '%'.($depth + 1);
+                } else {
+                    return null;
+                }
+                $rest = substr($rest, strlen($m[0]));
+            }
+
+            // The space after the label is the tab Word puts there itself.
+            return rtrim($text) !== '' ? rtrim($text) : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * The list-label rules (`.class::marker { content: … }`) of the HTML's
+     * `<style>` blocks as a `<style>` of their own, or '' without any. For a
+     * caller that inlines CSS before {@see fromHtml()}: an inliner cannot put
+     * a `::marker` rule on an element and drops it, and with it the labels
+     * Word's numbering came with (`3.1.`).
+     */
+    public static function markerStyleOf(string $html): string
+    {
+        if (! str_contains($html, '::marker') || preg_match_all('#<style\b[^>]*>(.*?)</style>#is', $html, $blocks) === 0) {
+            return '';
+        }
+        $css = '';
+        foreach (self::markerRules(implode("\n", $blocks[1])) as $class => $content) {
+            $css .= '.'.$class.'::marker { content: '.$content." }\n";
+        }
+
+        return $css !== '' ? '<style>'.$css.'</style>' : '';
+    }
+
+    /**
+     * `.class::marker { content: … }` rules of a style sheet, by class.
+     *
+     * @return array<string, string>
+     */
+    private static function markerRules(string $css): array
+    {
+        $rules = [];
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', $css);
+        if (preg_match_all('/\.([\w-]+)::marker\s*\{([^}]*)\}/', $css, $matches, PREG_SET_ORDER) > 0) {
+            foreach ($matches as [, $class, $body]) {
+                if (preg_match('/(?:^|;)\s*content\s*:\s*([^;]+)/', $body, $m) === 1) {
+                    $rules[$class] = trim($m[1]);
+                }
+            }
+        }
+
+        return $rules;
     }
 
     private function parseInlineImage(\DOMElement $node): ?Image
