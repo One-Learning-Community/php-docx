@@ -5,7 +5,7 @@ file. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.15.0] — 2026-10-19
 
 ### Added
 - Word's multilevel numbering through HTML. The reader counts lists on the
