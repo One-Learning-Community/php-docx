@@ -19,6 +19,14 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - A control character in text (`\x01`, a vertical tab pasted from Word, …)
   went into the XML as is, and Word refused to open the file. `XmlEscape`
   now removes every character XML 1.0 does not allow.
+- The same document now gives the same bytes on every write. ZipArchive put
+  the current time on every entry, so two writes a couple of seconds apart
+  differed, and a checksum, a cache key or a diff of generated files was
+  useless. Every entry now carries `CoreProperties::$modified` (as a UTC
+  wall-clock time), or 1980-01-01 00:00:00 when it is not set. The time is
+  written into the ZIP headers directly: `ZipArchive::setMtimeName()` alone
+  converts through the process's `TZ`, so the bytes would still differ
+  between machines in different time zones.
 
 ## [1.16.0] — 2026-10-20
 
