@@ -375,6 +375,7 @@ RunStyleBuilder::new()
     ->backgroundColor('eeeeee')
     ->highlight('yellow')
     ->fontFamily('Arial')
+    ->fontFamilyEastAsia('SimSun')   // w:eastAsia: шрифт для текста CJK
     ->fontSizePt(14.5)
     ->build();
 ```
@@ -574,7 +575,7 @@ foreach ($variables as $v) {
 
 Стили — namespace `Dskripchenko\PhpDocx\Style`:
 
-- `RunStyle` — шрифт, weight, italic, color, size, highlight, …
+- `RunStyle` — шрифт (и `fontFamilyEastAsia` для текста CJK), weight, italic, color, size, highlight, …
 - `ParagraphStyle` — alignment, indents, spacing, borders, разбиение на страницы (keepWithNext, keepLines, pageBreakBefore, widowControl)
 - `CellStyle` — width, padding, borders, valign, gridSpan, rowSpan
 - `TableStyle` — width, borders, alignment, cell margins, layout

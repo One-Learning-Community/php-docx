@@ -25,6 +25,11 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   its empty paragraph. HTML: `pageBreakBefore` is serialized as
   `break-before: page`, and `break-before: page` / `page-break-before: always`
   are parsed back.
+- `RunStyle::$fontFamilyEastAsia` (`w:eastAsia` on `<w:rFonts>`), with
+  `RunStyle::withFontFamilyEastAsia()` and
+  `RunStyleBuilder::fontFamilyEastAsia()`: the font Word uses for CJK text.
+  Written in document and style run properties, and read back from an
+  explicit `w:eastAsia`.
 
 ### Fixed
 - A tab or a newline in run text was written as is inside `<w:t>`, where

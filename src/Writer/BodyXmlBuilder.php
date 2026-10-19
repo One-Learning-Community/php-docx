@@ -403,10 +403,7 @@ final class BodyXmlBuilder
             return '';
         }
         $rPr = '';
-        if ($s->fontFamily !== null) {
-            $f = XmlEscape::attr($s->fontFamily);
-            $rPr .= '<w:rFonts w:ascii="'.$f.'" w:hAnsi="'.$f.'" w:cs="'.$f.'"/>';
-        }
+        $rPr .= RunFonts::render($s);
         if ($s->bold) {
             $rPr .= '<w:b/><w:bCs/>';
         }

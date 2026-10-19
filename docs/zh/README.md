@@ -370,6 +370,7 @@ RunStyleBuilder::new()
     ->backgroundColor('eeeeee')
     ->highlight('yellow')
     ->fontFamily('Arial')
+    ->fontFamilyEastAsia('SimSun')   // w:eastAsia：中日韩文字所用字体
     ->fontSizePt(14.5)
     ->build();
 ```
@@ -565,7 +566,7 @@ foreach ($variables as $v) {
 
 样式位于 `Dskripchenko\PhpDocx\Style`：
 
-- `RunStyle` — 字体、weight、italic、color、size、highlight 等
+- `RunStyle` — 字体（中日韩文字用 `fontFamilyEastAsia`）、weight、italic、color、size、highlight 等
 - `ParagraphStyle` — alignment、缩进、间距、边框、分页（keepWithNext、keepLines、pageBreakBefore、widowControl）
 - `CellStyle` — width、padding、边框、valign、gridSpan、rowSpan
 - `TableStyle` — width、边框、对齐、单元格边距、布局

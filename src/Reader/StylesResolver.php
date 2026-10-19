@@ -295,6 +295,7 @@ final class StylesResolver
             letterSpacingTwips: isset($arr['letterSpacingTwips']) ? (int) $arr['letterSpacingTwips'] : null,
             allCaps: (bool) ($arr['allCaps'] ?? false),
             smallCaps: (bool) ($arr['smallCaps'] ?? false),
+            fontFamilyEastAsia: $arr['fontFamilyEastAsia'] ?? null,
         );
     }
 
@@ -341,6 +342,9 @@ final class StylesResolver
         }
         if ($style->fontFamily !== null) {
             $out['fontFamily'] = $style->fontFamily;
+        }
+        if ($style->fontFamilyEastAsia !== null) {
+            $out['fontFamilyEastAsia'] = $style->fontFamilyEastAsia;
         }
         if ($style->highlight !== null) {
             $out['highlight'] = $style->highlight;

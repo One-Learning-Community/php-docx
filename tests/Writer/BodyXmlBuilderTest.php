@@ -253,6 +253,28 @@ final class BodyXmlBuilderTest extends TestCase
     }
 
     #[Test]
+    public function it_renders_the_east_asian_font_in_rfonts(): void
+    {
+        $both = (new BodyXmlBuilder)->render([new Paragraph([
+            new Run('x', new RunStyle(fontFamily: 'Arial', fontFamilyEastAsia: 'MS Mincho')),
+        ])]);
+        self::assertStringContainsString(
+            '<w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="MS Mincho" w:cs="Arial"/>',
+            $both,
+        );
+
+        $only = (new BodyXmlBuilder)->render([new Paragraph([
+            new Run('x', new RunStyle(fontFamilyEastAsia: 'SimSun')),
+        ])]);
+        self::assertStringContainsString('<w:rPr><w:rFonts w:eastAsia="SimSun"/></w:rPr>', $only);
+
+        $latin = (new BodyXmlBuilder)->render([new Paragraph([
+            new Run('x', new RunStyle(fontFamily: 'Arial')),
+        ])]);
+        self::assertStringContainsString('<w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>', $latin);
+    }
+
+    #[Test]
     public function it_renders_cant_split_row_before_header_and_height(): void
     {
         $xml = (new BodyXmlBuilder)->render([

@@ -379,6 +379,7 @@ RunStyleBuilder::new()
     ->backgroundColor('eeeeee')
     ->highlight('yellow')
     ->fontFamily('Arial')
+    ->fontFamilyEastAsia('SimSun')   // w:eastAsia: die Schrift für CJK-Text
     ->fontSizePt(14.5)
     ->build();
 ```
@@ -581,7 +582,7 @@ Alle Elemente leben unter `Dskripchenko\PhpDocx\Element`.
 
 Styles liegen unter `Dskripchenko\PhpDocx\Style`:
 
-- `RunStyle` — Schrift, Gewicht, Kursiv, Farbe, Grösse, Highlight, …
+- `RunStyle` — Schrift (und `fontFamilyEastAsia` für CJK-Text), Gewicht, Kursiv, Farbe, Grösse, Highlight, …
 - `ParagraphStyle` — Ausrichtung, Einzüge, Abstände, Rahmen, Seitenumbruch (keepWithNext, keepLines, pageBreakBefore, widowControl)
 - `CellStyle` — Breite, Padding, Rahmen, vertikale Ausrichtung,
   gridSpan, rowSpan
