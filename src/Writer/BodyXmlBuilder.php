@@ -360,6 +360,12 @@ final class BodyXmlBuilder
         if ($s->italic) {
             $rPr .= '<w:i/><w:iCs/>';
         }
+        if ($s->allCaps) {
+            $rPr .= '<w:caps/>';
+        }
+        if ($s->smallCaps) {
+            $rPr .= '<w:smallCaps/>';
+        }
         if ($s->underline) {
             $rPr .= '<w:u w:val="single"/>';
         }
