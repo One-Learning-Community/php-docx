@@ -24,6 +24,7 @@ use Dskripchenko\PhpDocx\Style\RunStyle;
 use Dskripchenko\PhpDocx\Style\TableStyle;
 use Dskripchenko\PhpDocx\Style\VerticalAlign;
 use Dskripchenko\PhpDocx\Writer\BodyXmlBuilder;
+use Dskripchenko\PhpDocx\Style\RowHeightRule;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -372,6 +373,20 @@ final class BodyXmlBuilderTest extends TestCase
         ]);
 
         self::assertStringNotContainsString('<w:tblInd', $xml);
+    }
+
+    #[Test]
+    public function it_writes_an_exact_row_height(): void
+    {
+        $xml = (new BodyXmlBuilder)->render([
+            new Table([
+                new TableRow([new TableCell([new Paragraph([new Run('A')])])], heightTwips: 300, heightRule: RowHeightRule::Exact),
+                new TableRow([new TableCell([new Paragraph([new Run('B')])])], heightTwips: 300),
+            ]),
+        ]);
+
+        self::assertStringContainsString('<w:trHeight w:val="300" w:hRule="exact"/>', $xml);
+        self::assertStringContainsString('<w:trHeight w:val="300" w:hRule="atLeast"/>', $xml);
     }
 
     #[Test]

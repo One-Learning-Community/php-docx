@@ -568,7 +568,7 @@ foreach ($variables as $v) {
 | `Field` | InlineElement | `{ instruction: string, style: RunStyle }` |
 | `LineBreak`, `PageBreak`, `HorizontalRule` | both | marker-элементы |
 | `Table` | BlockElement | `{ rows: TableRow[], style, caption, gridColumnsTwips }` |
-| `TableRow` | element | `{ cells: TableCell[], isHeader, heightTwips, cantSplit }` |
+| `TableRow` | element | `{ cells: TableCell[], isHeader, heightTwips, cantSplit, heightRule }` |
 | `TableCell` | element | `{ children: BlockElement[], style: CellStyle }` |
 | `ListNode` | BlockElement | `{ items: ListItem[], ordered, format, startAt }` |
 | `ListItem` | element | `{ children: InlineElement[], nestedList: ?ListNode }` |

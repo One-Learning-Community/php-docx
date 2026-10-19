@@ -35,6 +35,10 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the table in from the leading margin (negative values pull it out). The
   reader parses it back; HTML carries it as `margin-left` on the `<table>`
   in both directions.
+- Exact row height: `TableRow::$heightRule` (`RowHeightRule::AtLeast`, the
+  default, or `RowHeightRule::Exact`) and `TableRowBuilder::exactHeight()`.
+  The writer emitted every `w:trHeight` as `w:hRule="atLeast"`, so a row could
+  not be held to a fixed height; the rule is now written and read back.
 
 ### Fixed
 - A tab or a newline in run text was written as is inside `<w:t>`, where

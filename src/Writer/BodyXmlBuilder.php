@@ -656,7 +656,7 @@ final class BodyXmlBuilder
             $trPr .= '<w:tblHeader/>';
         }
         if ($row->heightTwips !== null) {
-            $trPr .= '<w:trHeight w:val="'.$row->heightTwips.'" w:hRule="atLeast"/>';
+            $trPr .= '<w:trHeight w:val="'.$row->heightTwips.'" w:hRule="'.$row->heightRule->value.'"/>';
         }
         $trPrXml = $trPr === '' ? '' : '<w:trPr>'.$trPr.'</w:trPr>';
 
