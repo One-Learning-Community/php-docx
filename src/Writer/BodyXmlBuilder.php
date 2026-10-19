@@ -350,11 +350,36 @@ final class BodyXmlBuilder
     private function renderRun(Run $r): string
     {
         $rPr = $this->renderRunProperties($r->style);
-        $text = XmlEscape::text($r->text);
-        // xml:space="preserve" keeps the leading and trailing spaces.
-        $textNode = '<w:t xml:space="preserve">'.$text.'</w:t>';
 
-        return '<w:r>'.$rPr.$textNode.'</w:r>';
+        return '<w:r>'.$rPr.self::renderRunContent($r->text).'</w:r>';
+    }
+
+    /**
+     * The content of a `<w:r>` for a piece of text. A tab inside `<w:t>` is
+     * not a tab to Word, and a newline is not a line break: both are shown as
+     * a space at best. Each "\t" becomes a `<w:tab/>` and each "\n", "\r\n"
+     * or "\r" a `<w:br/>`, between `<w:t>` segments; empty segments are left
+     * out. The reader turns `<w:tab/>` back into "\t".
+     */
+    private static function renderRunContent(string $text): string
+    {
+        $parts = preg_split('/(\t|\r\n|\r|\n)/', $text, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+        if ($parts === false || $parts === []) {
+            // An empty run keeps its (empty) <w:t>, as before.
+            return '<w:t xml:space="preserve">'.XmlEscape::text($text).'</w:t>';
+        }
+
+        $xml = '';
+        foreach ($parts as $part) {
+            $xml .= match ($part) {
+                "\t" => '<w:tab/>',
+                "\r\n", "\r", "\n" => '<w:br/>',
+                // xml:space="preserve" keeps the leading and trailing spaces.
+                default => '<w:t xml:space="preserve">'.XmlEscape::text($part).'</w:t>',
+            };
+        }
+
+        return $xml;
     }
 
     private function renderRunProperties(RunStyle $s): string
@@ -481,12 +506,10 @@ final class BodyXmlBuilder
      */
     private function renderCaption(string $text): string
     {
-        $escaped = XmlEscape::text($text);
-
         return '<w:p>'
             .'<w:pPr><w:pStyle w:val="Caption"/><w:jc w:val="center"/></w:pPr>'
             .'<w:r><w:rPr><w:i/><w:iCs/><w:color w:val="6b7280"/><w:sz w:val="20"/></w:rPr>'
-            .'<w:t xml:space="preserve">'.$escaped.'</w:t></w:r>'
+            .self::renderRunContent($text).'</w:r>'
             .'</w:p>';
     }
 

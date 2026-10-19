@@ -5,6 +5,15 @@ file. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- A tab or a newline in run text was written as is inside `<w:t>`, where
+  Word shows it as a space at best. The writer now splits the text into
+  `<w:t>`, `<w:tab/>` and `<w:br/>` (for "\n", "\r\n" and "\r"). The reader
+  reads `<w:tab/>` as "\t", so a document read and written back lost its
+  tabs; a `<pre>` from HTML lost its line breaks.
+
 ## [1.16.0] — 2026-10-20
 
 ### Added
