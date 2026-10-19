@@ -34,6 +34,8 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   section's parts are read now — they govern the document's first pages —
   and first-page parts only with `<w:titlePg/>`, even-page ones only with
   `<w:evenAndOddHeaders/>`, as Word shows them.
+- `numbering.xml` interleaved custom `abstractNum` and `num` elements; the
+  schema wants every `abstractNum` first.
 - A table cell was read paragraph by paragraph, and its numbered and
   bulleted items came out as plain paragraphs without markers. A cell is now
   read like a body: lists, nested tables and all.

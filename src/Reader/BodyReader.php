@@ -492,6 +492,10 @@ final class BodyReader
         }
 
         $flushText = function () use (&$emitted, &$textBuffer, &$state, &$valueSeen, $suppressValue, $runStyle): void {
+            // By reference: the run's text and state as they are now, not at
+            // the closure's creation (phpstan 2.3 reads them as the latter).
+            /** @var string $textBuffer */
+            /** @var string|null $state */
             if ($textBuffer === '') {
                 return;
             }

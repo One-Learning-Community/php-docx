@@ -99,23 +99,24 @@ final class NumberingXmlBuilder
         $xml .= $this->renderOrderedAbstractNum(1, ListFormat::Decimal, 1);
 
         // A custom abstract+concrete pair for every non-standard instance.
+        // The schema wants every abstractNum before the first num.
         $abstractIdCursor = 2;
+        $nums = '';
         foreach ($this->customInstances as $inst) {
             $key = $inst['format']->value.'_'.$inst['startAt'];
             $numId = $this->instanceMap[$key];
             $xml .= $this->renderOrderedAbstractNum($abstractIdCursor, $inst['format'], $inst['startAt']);
-            $xml .= '<w:num w:numId="'.$numId.'"><w:abstractNumId w:val="'.$abstractIdCursor.'"/></w:num>';
+            $nums .= '<w:num w:numId="'.$numId.'"><w:abstractNumId w:val="'.$abstractIdCursor.'"/></w:num>';
             $abstractIdCursor++;
         }
 
         foreach ($this->treeInstances as $numId => $levels) {
             $xml .= $this->renderTreeAbstractNum($abstractIdCursor, $levels);
-            $xml .= '<w:num w:numId="'.$numId.'"><w:abstractNumId w:val="'.$abstractIdCursor.'"/></w:num>';
+            $nums .= '<w:num w:numId="'.$numId.'"><w:abstractNumId w:val="'.$abstractIdCursor.'"/></w:num>';
             $abstractIdCursor++;
         }
 
-        // The standard concrete instances come after the custom ones — the
-        // order does not matter to Word or Pages.
+        $xml .= $nums;
         $xml .= '<w:num w:numId="'.self::BULLET_NUM_ID.'"><w:abstractNumId w:val="0"/></w:num>';
         $xml .= '<w:num w:numId="'.self::ORDERED_NUM_ID.'"><w:abstractNumId w:val="1"/></w:num>';
 
