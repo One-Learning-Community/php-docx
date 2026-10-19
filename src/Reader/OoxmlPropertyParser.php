@@ -78,7 +78,7 @@ final class OoxmlPropertyParser
      *
      * Keys: alignment, spaceBeforeTwips, spaceAfterTwips,
      * indentLeftTwips, indentRightTwips, indentFirstLineTwips,
-     * lineSpacingTwips, pageBreakAfter, borders, shadingColor,
+     * lineSpacingTwips, pageBreakAfter, keepWithNext, keepLines, borders, shadingColor,
      * pStyleId, numId, ilvl.
      *
      * @return array<string, mixed>
@@ -101,6 +101,7 @@ final class OoxmlPropertyParser
                 'spacing' => $this->parseSpacing($node, $out),
                 'pageBreakBefore' => $out['pageBreakBefore'] = OoxmlNs::boolToggle($node),
                 'keepNext' => $out['keepWithNext'] = OoxmlNs::boolToggle($node),
+                'keepLines' => $out['keepLines'] = OoxmlNs::boolToggle($node),
                 'pBdr' => $out['borders'] = $this->parseBorders($node),
                 'shd' => $out['shadingColor'] = $this->parseShdFill($node),
                 'numPr' => $this->parseNumPr($node, $out),

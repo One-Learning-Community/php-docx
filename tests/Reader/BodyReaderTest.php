@@ -317,6 +317,21 @@ final class BodyReaderTest extends TestCase
     }
 
     #[Test]
+    public function keep_lines_reaches_the_paragraph_style(): void
+    {
+        $body = $this->loadBody(
+            '<w:p><w:pPr><w:keepLines/></w:pPr><w:r><w:t>kept together</w:t></w:r></w:p>'
+            .'<w:p><w:pPr><w:keepLines w:val="0"/></w:pPr><w:r><w:t>off</w:t></w:r></w:p>'
+            .'<w:p><w:r><w:t>plain</w:t></w:r></w:p>'
+        );
+        $blocks = (new BodyReader)->read($body);
+
+        self::assertTrue($blocks[0]->style->keepLines);
+        self::assertFalse($blocks[1]->style->keepLines);
+        self::assertFalse($blocks[2]->style->keepLines);
+    }
+
+    #[Test]
     public function footnote_text_is_read_from_the_notes_part(): void
     {
         // `word/footnotes.xml` and `w:footnoteReference` used to be ignored, and

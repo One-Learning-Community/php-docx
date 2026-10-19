@@ -318,6 +318,7 @@ final class StylesResolver
             keepWithNext: (bool) ($arr['keepWithNext'] ?? false),
             borders: $borders instanceof BorderSet ? $borders : null,
             shadingColor: $arr['shadingColor'] ?? null,
+            keepLines: (bool) ($arr['keepLines'] ?? false),
         );
     }
 

@@ -7,6 +7,16 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- `w:cantSplit` on table rows: `TableRow::$cantSplit` and
+  `TableRowBuilder::cantSplit()` keep a row from breaking across pages
+  (Word's "Allow row to break across pages" turned off). The writer emits it
+  in `w:trPr`, the reader parses it back, and the HTML serializer writes
+  `break-inside: avoid` on the `<tr>`.
+- `w:keepLines` on paragraphs: `ParagraphStyle::$keepLines` ("Keep lines
+  together") is written, read, and serialized to HTML as
+  `break-inside: avoid`.
+
 ### Fixed
 - The writer now emits `w:keepNext` for `ParagraphStyle::$keepWithNext`. It was
   read from DOCX and serialized to HTML, but dropped on the way back into a

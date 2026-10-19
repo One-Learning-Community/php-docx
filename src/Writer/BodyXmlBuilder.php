@@ -237,6 +237,9 @@ final class BodyXmlBuilder
         if ($style->keepWithNext) {
             $pPr .= '<w:keepNext/>';
         }
+        if ($style->keepLines) {
+            $pPr .= '<w:keepLines/>';
+        }
         // numPr sits after keepNext/keepLines/pageBreakBefore and before pBdr in
         // CT_PPrBase; placing it here (not by prefixing the finished string)
         // keeps it there when those elements are written.
@@ -558,6 +561,9 @@ final class BodyXmlBuilder
     private function renderTableRow(TableRow $row): string
     {
         $trPr = '';
+        if ($row->cantSplit) {
+            $trPr .= '<w:cantSplit/>';
+        }
         if ($row->isHeader) {
             $trPr .= '<w:tblHeader/>';
         }

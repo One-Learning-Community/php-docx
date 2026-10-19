@@ -30,6 +30,8 @@ final class TableRowBuilder
 
     private ?int $heightTwips = null;
 
+    private bool $cantSplit = false;
+
     public function cell(string|callable $textOrBuilder): self
     {
         $cellBuilder = new TableCellBuilder;
@@ -81,8 +83,15 @@ final class TableRowBuilder
         return $this;
     }
 
+    public function cantSplit(bool $value = true): self
+    {
+        $this->cantSplit = $value;
+
+        return $this;
+    }
+
     public function build(): TableRow
     {
-        return new TableRow($this->cells, $this->isHeader, $this->heightTwips);
+        return new TableRow($this->cells, $this->isHeader, $this->heightTwips, $this->cantSplit);
     }
 }

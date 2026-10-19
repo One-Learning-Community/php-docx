@@ -93,6 +93,29 @@ final class SerializerTest extends TestCase
     }
 
     #[Test]
+    public function keep_lines_emits_break_inside_avoid(): void
+    {
+        $doc = new Document(section: new Section([
+            new Paragraph([new Run('x')], new ParagraphStyle(keepLines: true)),
+            new Paragraph([new Run('y')]),
+        ]));
+        $html = (new Serializer)->serialize($doc)->bodyHtml;
+        self::assertSame(1, substr_count($html, 'break-inside:avoid'));
+    }
+
+    #[Test]
+    public function cant_split_row_emits_break_inside_avoid(): void
+    {
+        $cell = new TableCell([new Paragraph([new Run('x')])]);
+        $doc = new Document(section: new Section([
+            new Table([new TableRow([$cell], cantSplit: true), new TableRow([$cell])]),
+        ]));
+        $html = (new Serializer)->serialize($doc)->bodyHtml;
+        self::assertSame(1, substr_count($html, '<tr style="break-inside:avoid">'));
+        self::assertSame(1, substr_count($html, '<tr>'));
+    }
+
+    #[Test]
     public function bullet_list_serializes_to_ul(): void
     {
         $doc = new Document(section: new Section([

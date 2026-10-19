@@ -192,6 +192,23 @@ final class TableBuilderTest extends TestCase
     }
 
     #[Test]
+    public function row_cant_split_flag(): void
+    {
+        $doc = DocumentBuilder::new()
+            ->table(fn (TableBuilder $t) => $t
+                ->row(fn (TableRowBuilder $r) => $r->cantSplit()->cell('A'))
+                ->row(fn (TableRowBuilder $r) => $r->cantSplit()->cantSplit(false)->cell('B'))
+                ->row(['C'])
+            )
+            ->build();
+        /** @var Table $t */
+        $t = $doc->section->body[0];
+        self::assertTrue($t->rows[0]->cantSplit);
+        self::assertFalse($t->rows[1]->cantSplit);
+        self::assertFalse($t->rows[2]->cantSplit);
+    }
+
+    #[Test]
     public function nested_table_in_cell(): void
     {
         $doc = DocumentBuilder::new()

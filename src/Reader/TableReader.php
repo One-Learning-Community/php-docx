@@ -21,7 +21,7 @@ use Dskripchenko\PhpDocx\Style\VerticalAlign;
  * `<w:tbl>` → Table:
  *  - `<w:tblPr>` → TableStyle (width, alignment, borders, layout, cellMargin)
  *  - `<w:tblGrid>/<w:gridCol>` → gridColumnsTwips
- *  - `<w:tr>` → TableRow (with trHeight, tblHeader)
+ *  - `<w:tr>` → TableRow (with trHeight, tblHeader, cantSplit)
  *  - `<w:tc>` → TableCell (gridSpan, vMerge restart/continue, width,
  *    borders, shading, padding, vAlign)
  *
@@ -153,7 +153,9 @@ final class TableReader
         $trPr = OoxmlNs::firstChild($tr, OoxmlNs::W, 'trPr');
         $isHeader = false;
         $heightTwips = null;
+        $cantSplit = false;
         if ($trPr !== null) {
+            $cantSplit = OoxmlNs::firstChild($trPr, OoxmlNs::W, 'cantSplit') !== null;
             $isHeader = OoxmlNs::firstChild($trPr, OoxmlNs::W, 'tblHeader') !== null;
             $h = OoxmlNs::firstChild($trPr, OoxmlNs::W, 'trHeight');
             if ($h !== null) {
@@ -169,7 +171,7 @@ final class TableReader
             $cells[] = $this->readCell($tcEl);
         }
 
-        return new TableRow($cells, $isHeader, $heightTwips);
+        return new TableRow($cells, $isHeader, $heightTwips, $cantSplit);
     }
 
     private function readCell(\DOMElement $tc): TableCell
@@ -331,7 +333,7 @@ final class TableReader
                     $restartRowSpan[$rowIdx][$cellIdx] ?? ($cell->style->vMergeContinue ? 1 : 1),
                 );
             }
-            $newRows[] = new TableRow($newCells, $row->isHeader, $row->heightTwips);
+            $newRows[] = new TableRow($newCells, $row->isHeader, $row->heightTwips, $row->cantSplit);
         }
 
         return $newRows;
@@ -380,7 +382,7 @@ final class TableReader
                 }
                 $newCells[] = $cell;
             }
-            $out[] = new TableRow($newCells, $row->isHeader, $row->heightTwips);
+            $out[] = new TableRow($newCells, $row->isHeader, $row->heightTwips, $row->cantSplit);
         }
 
         return $out;

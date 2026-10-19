@@ -498,7 +498,10 @@ final class Serializer
             $cells .= $this->renderTableCell($cell, isHeader: $row->isHeader);
         }
 
-        return '<tr>'.$cells.'</tr>';
+        // The standard CSS property: "do not break inside this block".
+        $style = $row->cantSplit ? ' style="break-inside:avoid"' : '';
+
+        return '<tr'.$style.'>'.$cells.'</tr>';
     }
 
     private function renderTableCell(TableCell $cell, bool $isHeader): string
@@ -578,6 +581,10 @@ final class Serializer
         if ($s->keepWithNext) {
             // The standard CSS property: "do not break after this block".
             $parts[] = 'break-after:avoid';
+        }
+        if ($s->keepLines) {
+            // The standard CSS property: "do not break inside this block".
+            $parts[] = 'break-inside:avoid';
         }
         if ($s->borders !== null) {
             foreach ($this->borderSetCss($s->borders) as $cssLine) {
