@@ -263,7 +263,13 @@ final class BodyXmlBuilder
             }
             if ($style->lineSpacingTwips !== null) {
                 $attrs[] = 'w:line="'.$style->lineSpacingTwips.'"';
-                $attrs[] = 'w:lineRule="exact"';
+                // Under `auto` the number is in 240ths of a single line, under
+                // `exact`/`atLeast` it is a height in twips. An unset or unknown
+                // rule stays `exact`, as the writer wrote it before.
+                $rule = in_array($style->lineSpacingRule, ['auto', 'exact', 'atLeast'], true)
+                    ? $style->lineSpacingRule
+                    : 'exact';
+                $attrs[] = 'w:lineRule="'.$rule.'"';
             }
             $pPr .= '<w:spacing '.implode(' ', $attrs).'/>';
         }
@@ -366,6 +372,12 @@ final class BodyXmlBuilder
         }
         if ($s->italic) {
             $rPr .= '<w:i/><w:iCs/>';
+        }
+        if ($s->allCaps) {
+            $rPr .= '<w:caps/>';
+        }
+        if ($s->smallCaps) {
+            $rPr .= '<w:smallCaps/>';
         }
         if ($s->underline) {
             $rPr .= '<w:u w:val="single"/>';
