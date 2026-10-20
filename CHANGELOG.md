@@ -5,6 +5,20 @@ file. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- The writer now emits `w:lineRule` from `ParagraphStyle::$lineSpacingRule`
+  (`auto`, `exact`, `atLeast`); it wrote `exact` whatever the rule was. The
+  reader fills the rule in, so a document with Word's usual 1.15 spacing
+  (`w:line="276" w:lineRule="auto"`) came back from read → write with lines
+  fixed at 13.8 pt, and text larger than that was clipped. An unset rule
+  still writes `exact`.
+- The writer now emits `<w:caps/>` and `<w:smallCaps/>` for
+  `RunStyle::$allCaps` / `$smallCaps`. The reader parsed them and the HTML
+  serializer wrote them, but a read → write round-trip dropped them, and a
+  heading set in small caps came back in lowercase.
+
 ## [1.15.0] — 2026-10-19
 
 ### Added
