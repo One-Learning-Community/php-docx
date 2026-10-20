@@ -37,6 +37,13 @@ final readonly class ParagraphStyle
         public ?BorderSet $borders = null,
         /** The paragraph fill (`<w:shd>` in `w:pPr`) — hex without the `#`, e.g. `0f766e`. */
         public ?string $shadingColor = null,
+        /**
+         * `w:keepLines` — "keep lines together".
+         *
+         * Word does not split the paragraph across pages: when it does not fit
+         * in what is left of the page, the whole paragraph moves to the next.
+         */
+        public bool $keepLines = false,
     ) {}
 
     public function isEmpty(): bool
@@ -51,7 +58,8 @@ final readonly class ParagraphStyle
             && ! $this->pageBreakAfter
             && ! $this->keepWithNext
             && $this->borders === null
-            && $this->shadingColor === null;
+            && $this->shadingColor === null
+            && ! $this->keepLines;
     }
 
     /**
@@ -71,6 +79,7 @@ final readonly class ParagraphStyle
         ?bool $keepWithNext = null,
         ?BorderSet $borders = null,
         ?string $shadingColor = null,
+        ?bool $keepLines = null,
     ): self {
         return new self(
             alignment: $alignment ?? $this->alignment,
@@ -85,6 +94,7 @@ final readonly class ParagraphStyle
             keepWithNext: $keepWithNext ?? $this->keepWithNext,
             borders: $borders ?? $this->borders,
             shadingColor: $shadingColor ?? $this->shadingColor,
+            keepLines: $keepLines ?? $this->keepLines,
         );
     }
 }

@@ -4,7 +4,16 @@ declare(strict_types=1);
 
 namespace Dskripchenko\PhpDocx\Tests\Writer;
 
+use Dskripchenko\PhpDocx\Document;
+use Dskripchenko\PhpDocx\Element\Paragraph;
+use Dskripchenko\PhpDocx\Element\Run;
+use Dskripchenko\PhpDocx\Element\Table;
+use Dskripchenko\PhpDocx\Element\TableCell;
+use Dskripchenko\PhpDocx\Element\TableRow;
 use Dskripchenko\PhpDocx\Html\Converter;
+use Dskripchenko\PhpDocx\Reader\DocxReader;
+use Dskripchenko\PhpDocx\Section;
+use Dskripchenko\PhpDocx\Style\ParagraphStyle;
 use Dskripchenko\PhpDocx\Writer\Word2007Writer;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -125,6 +134,42 @@ final class IntegrationTest extends TestCase
         self::assertStringContainsString('Иванов Иван Петрович', $xml);
         self::assertStringContainsString('<w:tblHeader/>', $xml);
         self::assertStringContainsString('<w:pBdr>', $xml);  // hr
+    }
+
+    #[Test]
+    public function keep_next_survives_a_write_and_read_roundtrip(): void
+    {
+        $doc = new Document(section: new Section([
+            new Paragraph([new Run('Heading')], new ParagraphStyle(keepWithNext: true)),
+            new Paragraph([new Run('Body')]),
+        ]));
+        $bytes = (new Word2007Writer)->write($doc);
+
+        self::assertStringContainsString('<w:pPr><w:keepNext/></w:pPr>', self::extractXml($bytes, 'word/document.xml'));
+
+        $read = (new DocxReader)->read($bytes);
+        self::assertTrue($read->section->body[0]->style->keepWithNext);
+        self::assertFalse($read->section->body[1]->style->keepWithNext);
+    }
+
+    #[Test]
+    public function cant_split_and_keep_lines_survive_a_write_and_read_roundtrip(): void
+    {
+        $cell = new TableCell([new Paragraph([new Run('A')])]);
+        $doc = new Document(section: new Section([
+            new Paragraph([new Run('kept')], new ParagraphStyle(keepLines: true)),
+            new Table([new TableRow([$cell], cantSplit: true), new TableRow([$cell])]),
+        ]));
+        $bytes = (new Word2007Writer)->write($doc);
+
+        $xml = self::extractXml($bytes, 'word/document.xml');
+        self::assertStringContainsString('<w:pPr><w:keepLines/></w:pPr>', $xml);
+        self::assertStringContainsString('<w:trPr><w:cantSplit/></w:trPr>', $xml);
+
+        $read = (new DocxReader)->read($bytes);
+        self::assertTrue($read->section->body[0]->style->keepLines);
+        self::assertTrue($read->section->body[1]->rows[0]->cantSplit);
+        self::assertFalse($read->section->body[1]->rows[1]->cantSplit);
     }
 
     private static function extractXml(string $bytes, string $internalPath): string

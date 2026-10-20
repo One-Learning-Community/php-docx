@@ -7,6 +7,8 @@ namespace Dskripchenko\PhpDocx\Tests\Writer;
 use Dskripchenko\PhpDocx\Element\HorizontalRule;
 use Dskripchenko\PhpDocx\Element\Hyperlink;
 use Dskripchenko\PhpDocx\Element\LineBreak;
+use Dskripchenko\PhpDocx\Element\ListItem;
+use Dskripchenko\PhpDocx\Element\ListNode;
 use Dskripchenko\PhpDocx\Element\PageBreak;
 use Dskripchenko\PhpDocx\Element\Paragraph;
 use Dskripchenko\PhpDocx\Element\Run;
@@ -14,6 +16,7 @@ use Dskripchenko\PhpDocx\Element\Table;
 use Dskripchenko\PhpDocx\Element\TableCell;
 use Dskripchenko\PhpDocx\Element\TableRow;
 use Dskripchenko\PhpDocx\Style\Alignment;
+use Dskripchenko\PhpDocx\Style\Border;
 use Dskripchenko\PhpDocx\Style\BorderSet;
 use Dskripchenko\PhpDocx\Style\CellStyle;
 use Dskripchenko\PhpDocx\Style\ParagraphStyle;
@@ -159,6 +162,99 @@ final class BodyXmlBuilderTest extends TestCase
         ]);
 
         self::assertStringContainsString('<w:tblHeader/>', $xml);
+    }
+
+    #[Test]
+    public function it_renders_keep_next_after_pstyle_and_before_borders(): void
+    {
+        $style = new ParagraphStyle(
+            alignment: Alignment::Center,
+            borders: BorderSet::all(new Border),
+            keepWithNext: true,
+        );
+        $xml = (new BodyXmlBuilder)->render([new Paragraph([new Run('x')], $style, headingLevel: 2)]);
+
+        self::assertStringContainsString('<w:pPr><w:pStyle w:val="Heading2"/><w:keepNext/><w:pBdr>', $xml);
+        self::assertLessThan(strpos($xml, '<w:jc'), strpos($xml, '<w:keepNext/>'));
+
+        $plain = (new BodyXmlBuilder)->render([new Paragraph([new Run('x')])]);
+        self::assertStringNotContainsString('keepNext', $plain);
+    }
+
+    #[Test]
+    public function it_renders_keep_lines_after_keep_next_and_before_numpr(): void
+    {
+        $style = new ParagraphStyle(keepWithNext: true, keepLines: true, borders: BorderSet::all(new Border));
+        $xml = (new BodyXmlBuilder)->render([new Paragraph([new Run('x')], $style, headingLevel: 2)]);
+        self::assertStringContainsString('<w:pStyle w:val="Heading2"/><w:keepNext/><w:keepLines/><w:pBdr>', $xml);
+
+        $list = (new BodyXmlBuilder)->render([
+            new ListNode([
+                new ListItem([new Run('x')], style: new ParagraphStyle(keepLines: true)),
+            ], ordered: true, levelText: '%1.'),
+        ]);
+        self::assertStringContainsString('<w:pStyle w:val="ListParagraph"/><w:keepLines/><w:numPr>', $list);
+
+        $plain = (new BodyXmlBuilder)->render([new Paragraph([new Run('x')])]);
+        self::assertStringNotContainsString('keepLines', $plain);
+    }
+
+    #[Test]
+    public function it_renders_cant_split_row_before_header_and_height(): void
+    {
+        $xml = (new BodyXmlBuilder)->render([
+            new Table([
+                new TableRow([
+                    new TableCell([new Paragraph([new Run('H')])]),
+                ], isHeader: true, heightTwips: 400, cantSplit: true),
+                new TableRow([
+                    new TableCell([new Paragraph([new Run('B')])]),
+                ]),
+            ]),
+        ]);
+
+        self::assertStringContainsString('<w:trPr><w:cantSplit/><w:tblHeader/><w:trHeight w:val="400" w:hRule="atLeast"/></w:trPr>', $xml);
+        self::assertSame(1, substr_count($xml, '<w:cantSplit/>'));
+    }
+
+    #[Test]
+    public function it_puts_numpr_after_keep_next_in_a_list_item(): void
+    {
+        $xml = (new BodyXmlBuilder)->render([
+            new ListNode([
+                new ListItem([new Run('x')], style: new ParagraphStyle(alignment: Alignment::Center, keepWithNext: true)),
+            ], ordered: true, levelText: '%1.'),
+        ]);
+
+        self::assertStringContainsString('<w:pPr><w:pStyle w:val="ListParagraph"/><w:keepNext/><w:numPr>', $xml);
+    }
+
+    #[Test]
+    public function it_places_numpr_before_the_other_properties_of_a_list_item(): void
+    {
+        // CT_PPrBase is a sequence: pStyle, numPr, pBdr, shd, spacing, ind, jc.
+        $xml = (new BodyXmlBuilder)->render([
+            new ListNode([
+                new ListItem([new Run('x')], style: new ParagraphStyle(
+                    alignment: Alignment::Center,
+                    spaceAfterTwips: 120,
+                    borders: BorderSet::all(new Border),
+                    shadingColor: 'eeeeee',
+                )),
+            ], ordered: true, levelText: '%1.'),
+        ]);
+
+        $order = ['<w:pStyle', '<w:numPr>', '<w:pBdr>', '<w:shd', '<w:spacing', '<w:jc'];
+        $last = -1;
+        foreach ($order as $tag) {
+            $pos = strpos($xml, $tag);
+            self::assertNotFalse($pos, $tag);
+            self::assertGreaterThan($last, $pos, $tag);
+            $last = $pos;
+        }
+
+        $bare = (new BodyXmlBuilder)->render([new ListNode([new ListItem([new Run('x')])], ordered: true, levelText: '%1.')]);
+        self::assertStringContainsString('<w:pPr><w:pStyle w:val="ListParagraph"/><w:numPr>', $bare);
     }
 
     #[Test]

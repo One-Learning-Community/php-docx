@@ -164,11 +164,8 @@ final class BodyXmlBuilder
         $xml = '';
         foreach ($list->items as $item) {
             if (! $item->markerHidden) {
-                $pPr = $this->renderParagraphProperties($item->style, null);
                 $numPr = '<w:numPr><w:ilvl w:val="'.min(8, $depth).'"/><w:numId w:val="'.$numId.'"/></w:numPr>';
-                $pPr = $pPr === ''
-                    ? '<w:pPr><w:pStyle w:val="ListParagraph"/>'.$numPr.'</w:pPr>'
-                    : (string) preg_replace('/^<w:pPr>/', '<w:pPr><w:pStyle w:val="ListParagraph"/>'.$numPr, $pPr, 1);
+                $pPr = $this->renderParagraphProperties($item->style, null, $numPr);
                 $children = '';
                 foreach ($item->children as $child) {
                     $children .= $this->renderInline($child);
@@ -224,13 +221,29 @@ final class BodyXmlBuilder
         return '<w:p>'.$pPr.$children.'</w:p>';
     }
 
-    private function renderParagraphProperties(ParagraphStyle $style, ?int $headingLevel): string
+    /**
+     * @param  string  $numPr  A ready `<w:numPr>` of a list item: it is placed at its
+     *                         position in the sequence (and `ListParagraph` is the style).
+     */
+    private function renderParagraphProperties(ParagraphStyle $style, ?int $headingLevel, string $numPr = ''): string
     {
         $pPr = '';
 
         if ($headingLevel !== null && $headingLevel >= 1 && $headingLevel <= 6) {
             $pPr .= '<w:pStyle w:val="Heading'.$headingLevel.'"/>';
+        } elseif ($numPr !== '') {
+            $pPr .= '<w:pStyle w:val="ListParagraph"/>';
         }
+        if ($style->keepWithNext) {
+            $pPr .= '<w:keepNext/>';
+        }
+        if ($style->keepLines) {
+            $pPr .= '<w:keepLines/>';
+        }
+        // numPr sits after keepNext/keepLines/pageBreakBefore and before pBdr in
+        // CT_PPrBase; placing it here (not by prefixing the finished string)
+        // keeps it there when those elements are written.
+        $pPr .= $numPr;
         if ($style->borders !== null) {
             $pPr .= $this->renderBorderSet($style->borders, 'w:pBdr');
         }
@@ -560,6 +573,9 @@ final class BodyXmlBuilder
     private function renderTableRow(TableRow $row): string
     {
         $trPr = '';
+        if ($row->cantSplit) {
+            $trPr .= '<w:cantSplit/>';
+        }
         if ($row->isHeader) {
             $trPr .= '<w:tblHeader/>';
         }

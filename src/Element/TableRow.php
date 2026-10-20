@@ -12,10 +12,12 @@ final readonly class TableRow
     /**
      * @param  list<TableCell>  $cells
      * @param  bool  $isHeader  When true, Word repeats the row on every page (`<w:tblHeader/>`).
+     * @param  bool  $cantSplit  When true, the row must not break across pages (`<w:cantSplit/>`; Word's "Allow row to break across pages" turned off).
      */
     public function __construct(
         public array $cells,
         public bool $isHeader = false,
         public ?int $heightTwips = null,
+        public bool $cantSplit = false,
     ) {}
 }

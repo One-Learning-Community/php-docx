@@ -150,6 +150,21 @@ final class TableReaderTest extends TestCase
     }
 
     #[Test]
+    public function row_with_cantSplit_marked(): void
+    {
+        $tbl = $this->loadTable(
+            '<w:tbl>'
+            .'<w:tr><w:trPr><w:cantSplit/></w:trPr>'
+            .'<w:tc><w:p><w:r><w:t>A</w:t></w:r></w:p></w:tc></w:tr>'
+            .'<w:tr><w:tc><w:p><w:r><w:t>B</w:t></w:r></w:p></w:tc></w:tr>'
+            .'</w:tbl>'
+        );
+        $t = (new TableReader)->read($tbl);
+        self::assertTrue($t->rows[0]->cantSplit);
+        self::assertFalse($t->rows[1]->cantSplit);
+    }
+
+    #[Test]
     public function trHeight_extracted(): void
     {
         $tbl = $this->loadTable(

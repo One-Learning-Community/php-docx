@@ -7,6 +7,16 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- `w:cantSplit` on table rows: `TableRow::$cantSplit` and
+  `TableRowBuilder::cantSplit()` keep a row from breaking across pages
+  (Word's "Allow row to break across pages" turned off). The writer emits it
+  in `w:trPr`, the reader parses it back, and the HTML serializer writes
+  `break-inside: avoid` on the `<tr>`.
+- `w:keepLines` on paragraphs: `ParagraphStyle::$keepLines` ("Keep lines
+  together") is written, read, and serialized to HTML as
+  `break-inside: avoid`.
+
 ### Fixed
 - The writer now emits `w:lineRule` from `ParagraphStyle::$lineSpacingRule`
   (`auto`, `exact`, `atLeast`); it wrote `exact` whatever the rule was. The
@@ -18,6 +28,9 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `RunStyle::$allCaps` / `$smallCaps`. The reader parsed them and the HTML
   serializer wrote them, but a read → write round-trip dropped them, and a
   heading set in small caps came back in lowercase.
+- The writer now emits `w:keepNext` for `ParagraphStyle::$keepWithNext`. It was
+  read from DOCX and serialized to HTML, but dropped on the way back into a
+  DOCX, so a heading kept with its next paragraph lost the rule.
 
 ## [1.15.0] — 2026-10-19
 
